@@ -13,14 +13,14 @@ struct Node{
 	vector<vector<int> > state;
 	int pieces_count[4];
 	float eval=0;
+	int alpha;
+	int beta;
 };
 
 struct Node_prune{
 	vector<vector<int> > state;
 	int pieces_count[4];
 	float eval;
-	float alpha;
-	float beta;
 };
 
 
@@ -719,7 +719,10 @@ struct Node_prune{
 			temp_node.state = next_state;
 			// cerr << numb_ply << " max ply left and value = "<<i<< endl;
 			temp_string = minValue(&temp_node, numb_ply-1, moves[i]);
-			
+			temp_node.alpha = max((*node).alpha, temp_node.alpha);
+			temp_node.eval = (float)temp_node.alpha;
+			if(temp_node.alpha >= temp_node.beta)
+				return moves[i];
 			if(max < temp_node.eval){
 				max = temp_node.eval;
 				best_state = next_state;
@@ -757,7 +760,10 @@ struct Node_prune{
 			temp_node.state = next_state;
 			// cerr << numb_ply << "min ply left and value = "<<i<< endl;
 			temp_string = maxValue(&temp_node, numb_ply-1, moves[i]);
-			
+			temp_node.beta = min(((*node).beta), temp_node.beta);
+			temp_node.eval = (float)temp_node.beta;
+			if(temp_node.alpha >= temp_node.beta)
+				return moves[i];
 			if(min > temp_node.eval){
 				min = temp_node.eval;
 				action_string = temp_string;
@@ -875,7 +881,9 @@ struct Node_prune{
 
 			Node start;
 			start.state = board;
-			start.eval = 0;
+			start.alpha = INT_MIN;
+			start.beta = INT_MAX;
+			start.eval = (float)start.alpha;
 			copy(begin(pieces_count), end(pieces_count), begin(start.pieces_count));
 			while(1){
 				string action_to_perform = myNextMove(&start);
@@ -892,6 +900,9 @@ struct Node_prune{
 				}
 				board = update_state(board,opp_move,start.pieces_count);
 				start.state = board;
+				start.alpha = INT_MIN;
+				start.beta = INT_MAX;
+				start.eval = (float)start.alpha;
 			}
 		}
 		else{
@@ -905,6 +916,8 @@ struct Node_prune{
 			Node start;
 			start.state = board;
 			start.eval = 0;
+			start.alpha = INT_MIN;
+			start.beta = INT_MAX;
 			copy(begin(pieces_count), end(pieces_count), begin(start.pieces_count));
 			while(1){
 				string opp_move = "";
@@ -920,6 +933,9 @@ struct Node_prune{
 				//cerr<<"updated"<<endl;
 				// printState(board);
 				start.state = board;
+				start.alpha = INT_MIN;
+				start.beta = INT_MAX;
+				start.eval = (float)start.alpha;
 				string action_to_perform = myNextMove(&start);
 				// cerr << action_to_perform << endl;
 				board = update_state(board,action_to_perform,start.pieces_count);
