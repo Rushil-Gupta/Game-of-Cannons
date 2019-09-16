@@ -700,6 +700,7 @@ struct Node_prune{
 	string maxValue(Node* node, int numb_ply, string s){
 		if(numb_ply==0){
 			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count,weights);
+			(*node).beta = (*node).eval;
 			// cerr << numb_ply << " max ply left" << endl;
 			return s;
 		}
@@ -719,7 +720,7 @@ struct Node_prune{
 			temp_node.state = next_state;
 			// cerr << numb_ply << " max ply left and value = "<<i<< endl;
 			temp_string = minValue(&temp_node, numb_ply-1, moves[i]);
-			temp_node.alpha = max((*node).alpha, temp_node.alpha);
+			(*node).beta = min((*node).beta, temp_node.alpha);
 			temp_node.eval = temp_node.alpha;
 			if(temp_node.alpha >= temp_node.beta)
 				return moves[i];
@@ -741,6 +742,7 @@ struct Node_prune{
 		if(numb_ply==0){
 			// cerr << "Woah bhai!" << endl;
 			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count,weights);
+			(*node).alpha = (*node).eval;
 			// cerr << numb_ply << " min ply left" << endl;
 			return s;
 		}
@@ -760,7 +762,7 @@ struct Node_prune{
 			temp_node.state = next_state;
 			// cerr << numb_ply << "min ply left and value = "<<i<< endl;
 			temp_string = maxValue(&temp_node, numb_ply-1, moves[i]);
-			temp_node.beta = min(((*node).beta), temp_node.beta);
+			(*node).alpha = max(((*node).alpha), temp_node.beta);
 			temp_node.eval = temp_node.beta;
 			if(temp_node.alpha >= temp_node.beta)
 				return moves[i];
