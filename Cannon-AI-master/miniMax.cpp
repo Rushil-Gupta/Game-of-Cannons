@@ -2,7 +2,7 @@
 #include <ctime>
 using namespace std;
 
-int numb_ply = 0;
+int move_count = 0;
 int pieces_count[4];
 int weights[8];
 int my_player=0;
@@ -24,11 +24,11 @@ struct Node_prune{
 };
 
 
-class Board{
-public:
+// class Board{
+// public:
 	vector<vector<int> > board;
 	// white originally
-	Board(int n, int m){
+	void Board(int n, int m){
 		vector<int> tempVector1;
 		vector<int> tempVector2;
 		bool flag = false;
@@ -38,6 +38,7 @@ public:
 		pieces_count[3] = m/2;
 		// opp_soldiers = 3 *()
 		if(player == 1){
+			cerr << "Yo!" << endl;
 			tempVector1.push_back(1);
 			tempVector1.push_back(1);
 			tempVector1.push_back(1);
@@ -299,12 +300,12 @@ public:
 		return count;
 	}
 
-	void printState(){
-		for(int i=0;i<board.size();i++){
-			for(int j=0;j<board[0].size();j++){
-				cout<< board[i][j] <<" ";
+	void printState(vector<vector<int> > board){
+		for(int i=0;i<board[0].size();i++){
+			for(int j=0;j<board.size();j++){
+				cerr<< board[j][i] <<" ";
 			}
-			cout<<endl;
+			cerr<<endl;
 		}
 	}
 
@@ -598,57 +599,69 @@ public:
 		int coor[4];
 		int trav = 0;
 		char type;
-		for(int i=1; i<move.length(), trav < 4;i++){
-			if(move[i] == ' ' && (move[i+1] != 'M' || move[i+1] != 'B')){
+		//cerr<<move.length()<<endl;
+		for(int i=1; i<move.length();i++){
+			if(move[i] == ' ' && (move[i+1] != 'M' && move[i+1] != 'B')){
 				int j = i+1;
 				int num = 0;
-				while(move[j] != ' '){
+				while(j < move.length()){
+					//cerr << move[j] << endl;
+					if(move[j] == ' ')
+						break;
 					num = num*10 + (int)(move[j]-'0');
 					j++;
 				}
 				coor[trav] = num;
+				//cerr << j << endl;
+				if(j == move.length())
+					break;
 				i = j-1;
 				trav++;
+				if(trav == 4)
+					break;
 			}
 			else{
 				type = move[i+1];
 				i++;
 			}
 		}
+		//cerr << type << endl;
 		if(type == 'B'){
-			if(board[coor[0]][coor[1]] == 1){
-				if(board[coor[2]][coor[3]] == -1)
+			if(state[coor[0]][coor[1]] == 1){
+				if(state[coor[2]][coor[3]] == -1)
 					piece_count[2]--;
-				else if(board[coor[2]][coor[3]] == -2)
+				else if(state[coor[2]][coor[3]] == -2)
 					piece_count[3]--;
 				state[coor[2]][coor[3]] = 0;
 			}
 			else{
-				if(board[coor[2]][coor[3]] == 1)
+				if(state[coor[2]][coor[3]] == 1)
 					piece_count[0]--;
-				else if(board[coor[2]][coor[3]] == 2)
+				else if(state[coor[2]][coor[3]] == 2)
 					piece_count[1]--;
 				state[coor[2]][coor[3]] = 0;	
 			}
 		}
 		else{
-			if(board[coor[0]][coor[1]] == 1){
-				if(board[coor[2]][coor[3]] == -1)
+			if(state[coor[0]][coor[1]] == 1){
+				if(state[coor[2]][coor[3]] == -1)
 					piece_count[2]--;
-				else if(board[coor[2]][coor[3]] == -2)
+				else if(state[coor[2]][coor[3]] == -2)
 					piece_count[3]--;
 				state[coor[2]][coor[3]] = 1;
+				//cerr << " lag ja gale" << endl;
 				state[coor[0]][coor[1]] = 0;
 			}
 			else{
-				if(board[coor[2]][coor[3]] == 1)
+				if(state[coor[2]][coor[3]] == 1)
 					piece_count[0]--;
-				else if(board[coor[2]][coor[3]] == 2)
+				else if(state[coor[2]][coor[3]] == 2)
 					piece_count[1]--;
 				state[coor[2]][coor[3]] = -1;
 				state[coor[0]][coor[1]] = 0;
 			}	
 		}
+		//cerr << "Chal ja be" << endl;
 		return state;
 	}
 
@@ -682,60 +695,12 @@ public:
 		return value;
 	}
 
-	string greedyBestStep(vector<string> valid_moves, Node* node, int weights[8]){   //state and pieces_count updated
-	// float max_eval = (*node).eval;
-		float temp_max = (*node).eval;
-		int temp_pieces_count[4];
-		temp_pieces_count[0] = (*node).pieces_count[0]; temp_pieces_count[1] = (*node).pieces_count[1]; temp_pieces_count[2] = (*node).pieces_count[2]; temp_pieces_count[3] = (*node).pieces_count[3];
-		int final_pieces_count[4];
-		final_pieces_count[0] = (*node).pieces_count[0]; final_pieces_count[1] = (*node).pieces_count[1]; final_pieces_count[2] = (*node).pieces_count[2]; final_pieces_count[3] = (*node).pieces_count[3];
-		vector<vector<int> > branch_state;
-		vector<vector<int> > best_state;
-		float temp_eval=0;	
-		int index_best=-1;
-
-		for(int i=0; i<valid_moves.size(); i++){
-			// temp_pieces_count = (*node).pieces_count;
-			temp_pieces_count[0] = (*node).pieces_count[0]; temp_pieces_count[1] = (*node).pieces_count[1]; temp_pieces_count[2] = (*node).pieces_count[2]; temp_pieces_count[3] = (*node).pieces_count[3];
-			branch_state = update_state((*node).state, valid_moves[i],temp_pieces_count);  //doesn't change state but only the pieces_count
-			temp_eval = Evaluation_func(branch_state, temp_pieces_count, weights);
-
-			if(temp_max <= temp_eval){
-				temp_max = temp_eval;
-				best_state = branch_state;
-				// final_pieces_count = temp_pieces_count;
-				copy(begin(temp_pieces_count), end(temp_pieces_count), begin(final_pieces_count)); 
-			}
-
-			// if(max_eval < temp_eval){
-			// 	max_eval = temp_eval;
-			// 	index_best = i;
-			// 	// best_state = branch_state;
-			// 	// final_pieces_count = temp_pieces_count; 
-			// 	break;
-			// }
-		}
-
-		if(index_best<valid_moves.size()){
-			// (*node).state = best_state;
-			// copy(begin(final_pieces_count), end(final_pieces_count), begin((*node).pieces_count)); 
-			// (*node).pieces_count = final_pieces_count;
-			(*node).eval = temp_max;
-			return valid_moves[index_best];
-		}
-
-	}
-
-	string miniMax(Node* node, int numb_ply){
-		string action = maxValue(node, numb_ply,"");
-		// value already updated in node
-		return action;
-	}
-
+	string minValue(Node* node, int numb_ply, string s);
 
 	string maxValue(Node* node, int numb_ply, string s){
 		if(numb_ply==0){
 			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count,weights);
+			// cerr << numb_ply << " max ply left" << endl;
 			return s;
 		}
 
@@ -752,22 +717,28 @@ public:
 			temp_node = *node;
 			next_state = update_state(temp_node.state, moves[i], (temp_node.pieces_count));
 			temp_node.state = next_state;
+			// cerr << numb_ply << " max ply left and value = "<<i<< endl;
 			temp_string = minValue(&temp_node, numb_ply-1, moves[i]);
+			
 			if(max < temp_node.eval){
 				max = temp_node.eval;
 				best_state = next_state;
 				action_string = temp_string;
+				action_index = i;
 			}
 		}
-
+						
+		
 		// (*node).eval = max;
 		// (*node).state = next_state;
-		return action_string;
+		return moves[action_index];
 	}
 
 	string minValue(Node* node, int numb_ply, string s){
 		if(numb_ply==0){
+			// cerr << "Woah bhai!" << endl;
 			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count,weights);
+			// cerr << numb_ply << " min ply left" << endl;
 			return s;
 		}
 
@@ -784,7 +755,9 @@ public:
 			temp_node = *node;
 			next_state = update_state(temp_node.state, moves[i], (temp_node.pieces_count));
 			temp_node.state = next_state;
+			// cerr << numb_ply << "min ply left and value = "<<i<< endl;
 			temp_string = maxValue(&temp_node, numb_ply-1, moves[i]);
+			
 			if(min > temp_node.eval){
 				min = temp_node.eval;
 				action_string = temp_string;
@@ -796,21 +769,82 @@ public:
 		return action_string;
 	}
 
+	string miniMax(Node* node, int numb_ply){
+		string action = maxValue(node, numb_ply,"");
+		// value already updated in node
+		cerr<<"action "<<action<<endl;
+		return action;
+	}
+
+	string greedyBestStep(vector<string> valid_moves, Node* node, int weights[8]){   //state and pieces_count updated
+		float temp_max = INT_MIN;
+		int temp_pieces_count[4];
+		copy(begin((*node).pieces_count), end((*node).pieces_count), begin(temp_pieces_count));
+		int final_pieces_count[4];
+		copy(begin((*node).pieces_count), end((*node).pieces_count), begin(final_pieces_count));
+
+		vector<vector<int> > branch_state;
+		vector<vector<int> > best_state;
+		float temp_eval=0;	
+		int index_best=-1;
+
+		for(int i=0; i<valid_moves.size(); i++){
+			// temp_pieces_count = (*node).pieces_count;
+			temp_pieces_count[0] = (*node).pieces_count[0]; temp_pieces_count[1] = (*node).pieces_count[1]; temp_pieces_count[2] = (*node).pieces_count[2]; temp_pieces_count[3] = (*node).pieces_count[3];
+			branch_state = update_state((*node).state, valid_moves[i],temp_pieces_count);  //doesn't change state but only the pieces_count
+			// cerr<<"move "<<valid_moves[i]<<endl;
+			// printState(branch_state);
+			temp_eval = Evaluation_func(branch_state, temp_pieces_count, weights);
+			// cerr<<"temp_eval "<<temp_eval<<endl;
+			if(temp_max <= temp_eval){
+				temp_max = temp_eval;
+				best_state = branch_state;
+				index_best = i;
+				// final_pieces_count = temp_pieces_count;
+				copy(begin(temp_pieces_count), end(temp_pieces_count), begin(final_pieces_count)); 
+			}
+
+			// if(max_eval < temp_eval){
+			// 	max_eval = temp_eval;
+			// 	index_best = i;
+			// 	// best_state = branch_state;
+			// 	// final_pieces_count = temp_pieces_count; 
+			// 	break;
+			// }
+
+		}
+		cerr<<"best index"<<index_best<<endl;
+		cerr<<valid_moves[index_best]<<endl;
+		// if(index_best<valid_moves.size()){
+			// (*node).state = best_state;
+			// copy(begin(final_pieces_count), end(final_pieces_count), begin((*node).pieces_count)); 
+			// (*node).pieces_count = final_pieces_count;
+			(*node).eval = temp_max;
+			return valid_moves[index_best];
+		// }
+
+	}
+
 	string myNextMove(Node* curr_node){
 		string next = "";
-	 	if(numb_ply<6){			//move greedily
+	 	if(move_count<6){			//move greedily
+	 		cerr<<"greedy "<<move_count<<endl;
 		 	vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player,1);
+		 	cerr<<valid_moves[0]<<endl;
 		 	next = greedyBestStep(valid_moves, curr_node, weights);
-		 	return next;
+		 	// cerr<<next<<endl;
 		}
 		else{
-			if(numb_ply>6 && numb_ply<=40){	//ply of 4
-				next = miniMax(curr_node, 4);
+			printState((*curr_node).state);
+			if(move_count>=6 && move_count<=60){	//ply of 4
+				cerr<<"2 ply"<<endl;
+				next = miniMax(curr_node, 2);
 			} 
-			else if(numb_ply>40 && numb_ply<=100){ //ply of 6
-				next = miniMax(curr_node, 6);
+			else if(move_count>40 && move_count<=100){ //ply of 6
+				next = miniMax(curr_node, 4);
 			}
 		}
+		move_count+=2;
 		return next;
 	}
 
@@ -820,17 +854,25 @@ public:
 		int N;
 		int M; 
 		int t;
-
+		cerr<< "hi" <<endl;
 		cin >> ID >> N >> M >> t;
-		Board* newGame = new Board(N,M);
-		cout<<"Hello guys"<<endl;
+		cerr<< ID <<", "<<N<<endl;
+		// Board* newGame = new Board(N,M);
+		// Board* newGame;
+		if(ID == 1)
+			player = 2;
+		else
+			player = 1;
+		Board(N,M);
+		// cout<<"Hello guys"<<endl;
 		if(ID == 1){
 			player = 2;
 			my_player = 2;
 			opp_player = 1;
-			
-			cout<<"pls come 1"<<endl;
+			cerr<< "hi 1" <<endl;
+			// cout<<"pls come 1"<<endl;
 			// newGame->printState();
+
 			Node start;
 			start.state = board;
 			start.eval = 0;
@@ -838,6 +880,7 @@ public:
 			while(1){
 				string action_to_perform = myNextMove(&start);
 				board = update_state(board,action_to_perform,start.pieces_count);
+				// cout<"give action"<<endl;
 				cout << action_to_perform << endl;
 				string opp_move = "";
 				string read = "";
@@ -852,11 +895,12 @@ public:
 			}
 		}
 		else{
+			cerr<< "hi 2" <<endl;
 			player = 1;
 			my_player = 1;
 			opp_player = 2;
 			// newGame->printState();
-			cout<<"pls come 2"<<endl;
+			// cout<<"pls come 2"<<endl;
 			
 			Node start;
 			start.state = board;
@@ -871,13 +915,18 @@ public:
 					cin >> read;
 					opp_move += " " + read;
 				}
+				//cerr<<opp_move<<endl;
 				board = update_state(board,opp_move,start.pieces_count);
+				//cerr<<"updated"<<endl;
+				// printState(board);
 				start.state = board;
 				string action_to_perform = myNextMove(&start);
+				// cerr << action_to_perform << endl;
 				board = update_state(board,action_to_perform,start.pieces_count);
+				// cout<"give action"<<endl;
 				cout << action_to_perform << endl;
 			}	
 		}
 		return 0;
 	}
-};
+// };
