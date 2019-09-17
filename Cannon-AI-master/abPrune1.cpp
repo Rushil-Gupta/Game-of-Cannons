@@ -8,6 +8,7 @@ int weights[8];
 int my_player=0;
 int opp_player=0;
 int player = 0; 
+string last_move = "";
 
 struct Node{
 	vector<vector<int> > state;
@@ -38,7 +39,7 @@ struct Node_prune{
 		pieces_count[3] = m/2;
 		// opp_soldiers = 3 *()
 		if(player == 1){
-			cerr << "Yo!" << endl;
+			// cerr << "Yo!" << endl;
 			tempVector1.push_back(1);
 			tempVector1.push_back(1);
 			tempVector1.push_back(1);
@@ -340,14 +341,14 @@ struct Node_prune{
 			//Retreat Check 
 			if(is_opponent_adjacent(x,y,(-1*val),2)){
 				if(y <= board[0].size()-3){
-					if(board[x][y+2] != val)
+					if(board[x][y+2] != val && board[x][y+2] != (2*val))
 						moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x) + " " + to_string(y+2));
 					if(x >= 2){
-						if(board[x-2][y+2] != val)
+						if(board[x-2][y+2] != val && board[x-2][y+2] != (2*val))
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x-2) + " " + to_string(y+2));
 					}
 					if(x <= board.size()-3){
-						if(board[x+2][y+2] != val)
+						if(board[x+2][y+2] != val && board[x+2][y+2] != (2*val))
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x+2) + " " + to_string(y+2));
 					}
 				}
@@ -383,18 +384,19 @@ struct Node_prune{
 			//Retreat Check 
 			if(is_opponent_adjacent(x,y,(-1*val),1)){
 				if(y >= 2){
-					if(board[x][y-2] != val)
+					if(board[x][y-2] != val && board[x][y-2] != (2*val))
 						moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x) + " " + to_string(y-2));
 					if(x >= 2){
-						if(board[x-2][y-2] != val)
+						if(board[x-2][y-2] != val && board[x-2][y-2] != (2*val))
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x-2) + " " + to_string(y-2));
 					}
 					if(x <= board.size()-3){
-						if(board[x+2][y-2] != val)
+						if(board[x+2][y-2] != val && board[x+2][y-2] != (2*val))
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x+2) + " " + to_string(y-2));
 					}
 				}
 			}
+			//cerr << "Yes!" << endl;
 		}
 
 			//cannon movement and bombing covered for possible cannons in all 8 directions
@@ -417,6 +419,7 @@ struct Node_prune{
 			}
 		}
 
+		//cerr << "Yeah" << endl;
 		if(check_cannon(x,y,1,"BV")){
 			if(y+3 < board[0].size()){
 				if(board[x][y+3] == 0)
@@ -436,8 +439,9 @@ struct Node_prune{
 			}
 		}
 
+		//cerr << "BV" << endl;
 		if(check_cannon(x,y,1,"RBD")){
-			if(x+3 <= board.size() &&  y+3 < board[0].size()){
+			if(x+3 < board.size() &&  y+3 < board[0].size()){
 				if(board[x+3][y+3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x+3) + " " + to_string(y+3));
 			}
@@ -455,6 +459,7 @@ struct Node_prune{
 			}
 		}
 
+		//cerr << "RBD" << endl;
 		if(check_cannon(x,y,1,"RH")){
 			if(x+3 < board.size()){
 				if(board[x+3][y] == 0)
@@ -474,18 +479,19 @@ struct Node_prune{
 			}
 		}
 		
+		//cerr << "RH" << endl;
 		if(check_cannon(x,y,1,"RUD")){
-			if(x+3 <= board.size() &&  y-3 >=0){
+			if(x+3 < board.size() &&  y-3 >=0){
 				if(board[x+3][y-3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x+3) + " " + to_string(y-3));
 			}
-			if(x-1 >= 0 && y+1 <= board[0].size()){
+			if(x-1 >= 0 && y+1 < board[0].size()){
 				if(board[x-1][y+1] == 0){
-					if(x-2 >= 0 && y+2 <= board[0].size()){
+					if(x-2 >= 0 && y+2 < board[0].size()){
 						if(board[x-2][y+2] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x-2) + " " + to_string(y+2));			
 					}
-					if(x-3 >= 0 && y+3 <= board[0].size()){
+					if(x-3 >= 0 && y+3 < board[0].size()){
 						if(board[x-3][y+3] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x-3) + " " + to_string(y+3));			
 					}
@@ -493,18 +499,19 @@ struct Node_prune{
 			}
 		}
 
+		//cerr << "RUD" << endl;
 		if(check_cannon(x,y,1,"UV")){
 			if(y-3 >=0){
 				if(board[x][y-3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x) + " " + to_string(y-3));
 			}
-			if(y+1 <= board[0].size()){
+			if(y+1 < board[0].size()){
 				if(board[x][y+1] == 0){
-					if(y+2 <= board[0].size()){
+					if(y+2 < board[0].size()){
 						if(board[x][y+2] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x) + " " + to_string(y+2));			
 					}
-					if(y+3 <= board[0].size()){
+					if(y+3 < board[0].size()){
 						if(board[x][y+3] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x) + " " + to_string(y+3));			
 					}
@@ -512,18 +519,19 @@ struct Node_prune{
 			}
 		}
 
+		//cerr << "UV" << endl;
 		if(check_cannon(x,y,1,"LUD")){
 			if(x-3 >=0 &&  y-3 >=0){
 				if(board[x-3][y-3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x-3) + " " + to_string(y-3));
 			}
-			if(x+1 <= board.size() && y+1 <= board[0].size()){
+			if(x+1 < board.size() && y+1 < board[0].size()){
 				if(board[x+1][y+1] == 0){
-					if(x+2 <= board.size() && y+2 <= board[0].size()){
+					if(x+2 < board.size() && y+2 < board[0].size()){
 						if(board[x+2][y+2] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x+2) + " " + to_string(y+2));			
 					}
-					if(x+3 <= board.size() && y+3 <= board[0].size()){
+					if(x+3 < board.size() && y+3 < board[0].size()){
 						if(board[x+3][y+3] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x+3) + " " + to_string(y+3));			
 					}
@@ -531,24 +539,26 @@ struct Node_prune{
 			}
 		}
 
+		//cerr << "LUD" << endl;
 		if(check_cannon(x,y,1,"LH")){
 			if(x-3 >=0){
 				if(board[x-3][y] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x-3) + " " + to_string(y));
 			}
-			if(x+1 <= board.size()){
+			if(x+1 < board.size()){
 				if(board[x+1][y] == 0){
-					if(x+2 <= board.size()){
+					if(x+2 < board.size()){
 						if(board[x+2][y] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x+2) + " " + to_string(y));			
 					}
-					if(x+3 <= board.size()){
+					if(x+3 < board.size()){
 						if(board[x+3][y] != val)
 							moves.push_back("S " + to_string(x) + " " + to_string(y) + " B "+ to_string(x+3) + " " + to_string(y));			
 					}
 				}		
 			}
 		}	
+		//cerr << "LH" << endl;
 		return moves;
 	}
 
@@ -556,8 +566,10 @@ struct Node_prune{
 		vector<string> moves;
 		for(int i=0; i<state.size();i++){
 		 	for(int j =0; j<state[0].size();j++){
-		 		if(state[i][j] == val)
+		 		if(state[i][j] == val){
 		 			moves = getValidMovesForSoldier(state,i,j,player,val, moves);
+		 			cerr << i << " " << j << " " << endl;
+		 		}
 		 	}
 		}
 		return moves;
@@ -581,14 +593,16 @@ struct Node_prune{
 		if(player == 2){
 			for(int i=0 ;i<m; i+= 2){
 				int count = 0;
-				if(val < 0)
+				if(abs(state[i][0]) == 2)
 					count = waysToAttackSquare(i,0,(-1*val),player);
 				answer.push_back(count);
 			}
 		}
 		else{
 			for(int i=1 ;i<m; i+= 2){
-				int count = waysToAttackSquare(i,n,(-1*val), player);
+				int count = 0;
+				if(abs(state[i][7]) == 2)
+				count = waysToAttackSquare(i,n,(-1*val), player);
 				answer.push_back(count);
 			}	
 		}
@@ -665,6 +679,208 @@ struct Node_prune{
 		return state;
 	}
 
+	void Targets(vector<vector<int> > game_state, int x, int y, bool you, string str, int* target_tow, int* target_sol){
+		int soldier = 1;
+		int tower = 2;
+		int target_soldier=0;
+		int target_tower =0;
+		vector<int> ans(2);
+		if(!you){
+			soldier = -1;
+			tower = -2;
+		}
+
+		if(str.compare("vert")==0){
+			if(y+2 < game_state[0].size()){
+				if(game_state[x][y+2] == 0){
+					if(y+3 < game_state[0].size()){
+						if(game_state[x][y+3] == soldier)
+							target_soldier+=1;
+						else if(game_state[x][y+3] == tower)
+							target_tower+=1;
+					}
+					if(y+4 < game_state[0].size()){
+						if(game_state[x][y+4] == soldier)
+							target_soldier+=1;
+						else if(game_state[x][y+4] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+			if(y-2 >= 0){
+				if(game_state[x][y-2] == 0){
+					if(y-3 >= 0){
+						if(game_state[x][y-3] == soldier)
+							target_soldier+=1;
+						else if(game_state[x][y-3] == tower)
+							target_tower+=1;
+					}
+					if(y-4 >=0){
+						if(game_state[x][y-4] == soldier)
+							target_soldier+=1;
+						else if(game_state[x][y-4] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+		}
+
+		if(str.compare("horz")==0){
+			if(x+2 < game_state.size()){
+				if(game_state[x+2][y] == 0){
+					if(x+3 < game_state.size()){
+						if(game_state[x+3][y] == soldier)
+							target_soldier+=1;
+						else if(game_state[x+3][y] == tower)
+							target_tower+=1;
+					}
+					if(x+4 < game_state.size()){
+						if(game_state[x+4][y] == soldier)
+							target_soldier+=1;
+						else if(game_state[x+4][y] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+			if(x-2 >= 0){
+				if(game_state[x-2][y] == 0){
+					if(x-3 >= 0){
+						if(game_state[x-3][y] == soldier)
+							target_soldier+=1;
+						else if(game_state[x-3][y] == tower)
+							target_tower+=1;
+					}
+					if(x-4 >=0){
+						if(game_state[x-4][y] == soldier)
+							target_soldier+=1;
+						else if(game_state[x-4][y] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+		}
+
+		if(str.compare("ldiag")==0){
+			if(x+2 < game_state.size() && y+2 < game_state[0].size()){
+				if(game_state[x+2][y+2] == 0){
+					if(x+3 < game_state.size() && y+3 < game_state[0].size()){
+						if(game_state[x+3][y+3] == soldier)
+							target_soldier+=1;
+						else if(game_state[x+3][y+3] == tower)
+							target_tower+=1;
+					}
+					if(x+4 < game_state.size() && y+4 < game_state[0].size()){
+						if(game_state[x+4][y+4] == soldier)
+							target_soldier+=1;
+						else if(game_state[x+4][y+4] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+			if(x-2 >= 0 && y-2 >= 0){
+				if(game_state[x-2][y-2] == 0){
+					if(x-3 >= 0 && y-3 >= 0){
+						if(game_state[x-3][y-3] == soldier)
+							target_soldier+=1;
+						else if(game_state[x-3][y-3] == tower)
+							target_tower+=1;
+					}
+					if(x-4 >= 0 && y-4 >= 0){
+						if(game_state[x-4][y-4] == soldier)
+							target_soldier+=1;
+						else if(game_state[x-4][y-4] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+		}
+		
+		if(str.compare("rdiag")==0){
+			if(x+2 < game_state.size() && y-2 >= 0){
+				if(game_state[x+2][y-2] == 0){
+					if(x+3 < game_state.size() && y-3 >=0){
+						if(game_state[x+3][y-3] == soldier)
+							target_soldier+=1;
+						else if(game_state[x+3][y-3] == tower)
+							target_tower+=1;
+					}
+					if(x+4 < game_state.size() && y-4 >=0){
+						if(game_state[x+4][y-4] == soldier)
+							target_soldier+=1;
+						else if(game_state[x+4][y-4] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+			if(x-2 >= 0 && y+2 < game_state[0].size()){
+				if(game_state[x-2][y+2] == 0){
+					if(x-3 >= 0 && y+3 < game_state[0].size()){
+						if(game_state[x-3][y+3] == soldier)
+							target_soldier+=1;
+						else if(game_state[x-3][y+3] == tower)
+							target_tower+=1;
+					}
+					if(x-4 >= 0 && y+4 < game_state[0].size()){
+						if(game_state[x-4][y+4] == soldier)
+							target_soldier+=1;
+						else if(game_state[x-4][y+4] == tower)
+							target_tower+=1;
+					}
+				}
+			}
+		}
+		(*target_sol) += target_soldier;
+		(*target_tow) += target_tower;
+		return;
+	}
+
+	vector<int> cannon_effect(vector<vector<int> > game_state,int val){
+		// cerr << "Yay!" << endl;
+		int cannon_count = 0;
+		int cannon_attack_tower = 0;
+		int cannon_attack_soldier = 0;
+		vector<int> ans;
+		for(int i=0; i<game_state.size(); i++){
+			for(int j=0; j<game_state[0].size(); j++){
+				if(game_state[i][j]==val){
+					if(i > 0 && i < game_state.size()-1){
+						if(game_state[i-1][j] == val  && game_state[i+1][j] == val){
+							(cannon_count)+=1;
+							Targets(game_state,i, j,val<0 , "horz", &cannon_attack_tower, &cannon_attack_soldier);
+							// cerr << "Done" << endl;
+						}
+					}
+					if(j > 0 && j < game_state[0].size()-1){
+						if(game_state[i][j-1] == val  && game_state[i][j+1] == val){
+							(cannon_count)+=1;
+							Targets(game_state,i, j,val<0 , "vert", &cannon_attack_tower, &cannon_attack_soldier);
+							// cerr << "Done1" << endl;
+						}
+					}
+					if(i > 0 && i < game_state.size()-1 && j > 0 && j < game_state[0].size()-1){
+						if(game_state[i-1][j+1] == val  && game_state[i+1][j-1] == val){
+							(cannon_count)+=1;
+							Targets(game_state,i, j,val<0 , "rdiag", &cannon_attack_tower, &cannon_attack_soldier);
+							// cerr << "Done2" << endl;
+						}
+					}
+					if(i > 0 && i < game_state.size()-1 && j > 0 && j < game_state[0].size()-1){
+						if(game_state[i-1][j-1] == val  && game_state[i+1][j+1] == val){
+							(cannon_count)+=1;
+							Targets(game_state,i, j,val<0 , "ldiag", &cannon_attack_tower, &cannon_attack_soldier);
+							// cerr << "Done3" << endl;
+						}
+					}
+				}
+			}
+		}
+		//cerr << "Wpah!" << endl;
+		ans.push_back(cannon_count);
+		ans.push_back(cannon_attack_tower);
+		ans.push_back(cannon_attack_soldier);
+		return ans;
+	}
+
 	int Evaluation_func(vector< vector<int> > state, int piece_count[], int* weights){
 		// int m = state.size();
 		// int n = state[0].size();
@@ -677,12 +893,13 @@ struct Node_prune{
 		int target_soldier_opp = 0;
 		vector<int> target_tower_opp;
 		vector<int> target_tower_us;
+		vector<int> my_cannon_stats;
+		vector<int> opp_cannon_stats;
 		if(player == 1){
 			target_soldier_opp = opp_soldiers_under_attack(state,1,2);
 			target_tower_opp = opp_tower_attacks_possible(state,1,2);
 			target_soldier_us = opp_soldiers_under_attack(state,-1,1);
 			target_tower_us = opp_tower_attacks_possible(state,-1,1);
-
 		}
 		else{
 			target_soldier_opp = opp_soldiers_under_attack(state,1,1);
@@ -690,6 +907,8 @@ struct Node_prune{
 			target_soldier_us = opp_soldiers_under_attack(state,-1,2);
 			target_tower_us = opp_tower_attacks_possible(state,-1,2);
 		}
+		my_cannon_stats = cannon_effect(state,1);
+		opp_cannon_stats = cannon_effect(state,-1);
 		int towers_at_risk_us = 0;
 		for(int i=0; i<4; i++){
 			if(target_tower_us[i]>0)
@@ -714,8 +933,11 @@ struct Node_prune{
 				tower_attacks_sum_opp  = tower_attacks_sum_opp + target_tower_opp[i]-1;
 			}
 		}
-
-		int value = (s1*10) + (t1*100) - (s2*10) - (t2*100) + (target_soldier_opp*5) + (towers_at_risk_opp*50) + (tower_attacks_sum_opp*20) - (target_soldier_us*5) - (towers_at_risk_us*50) - (tower_attacks_sum_us*20);
+		// cerr<<"eval called"<<endl;
+		int value = (s1*400) + (t1*1000) - (s2*400) - (t2*1000);
+		value += (target_soldier_opp*100) + (towers_at_risk_opp*600) + (tower_attacks_sum_opp*20) - (target_soldier_us*100) - (towers_at_risk_us*700) - (tower_attacks_sum_us*40);
+		value += (my_cannon_stats[0] * 100) + (my_cannon_stats[1] * 150) + (my_cannon_stats[2] * 200) - (opp_cannon_stats[0] * 150) - (opp_cannon_stats[1] * 200) - (opp_cannon_stats[2] * 300);
+		cerr << "value "<<value<< endl;
 		return value;
 	}
 
@@ -738,25 +960,24 @@ struct Node_prune{
 		int action_index=0;
 		string temp_string;
 		string action_string;
-
+		int random_ind = rand()%(moves.size());
 		for(int i=0; i<moves.size(); i++){
 			temp_node = *node;
-			next_state = update_state(temp_node.state, moves[i], (temp_node.pieces_count));
+			next_state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
 			temp_node.state = next_state;
 			// cerr << numb_ply << " max ply left and value = "<<i<< endl;
-			temp_string = minValue(&temp_node, numb_ply-1, moves[i]);
+			temp_string = minValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
 			(*node).beta = min((*node).beta, temp_node.alpha);
 			temp_node.eval = temp_node.alpha;
 			if(temp_node.alpha >= temp_node.beta)
-				return moves[i];
-			if(max1 < temp_node.eval){
+				return moves[(random_ind+i)%(moves.size())];
+			if(max1 <= temp_node.eval){
 				max1 = temp_node.eval;
 				best_state = next_state;
 				action_string = temp_string;
-				action_index = i;
+				action_index = (random_ind+i)%(moves.size());
 			}
-		}
-						
+		}						
 		
 		// (*node).eval = max;
 		// (*node).state = next_state;
@@ -780,26 +1001,27 @@ struct Node_prune{
 		int action_index=0;
 		string temp_string;
 		string action_string;
-
+		int random_ind = rand()%(moves.size());
 		for(int i=0; i<moves.size(); i++){
 			temp_node = *node;
-			next_state = update_state(temp_node.state, moves[i], (temp_node.pieces_count));
+			next_state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
 			temp_node.state = next_state;
 			// cerr << numb_ply << "min ply left and value = "<<i<< endl;
-			temp_string = maxValue(&temp_node, numb_ply-1, moves[i]);
+			temp_string = maxValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
 			(*node).alpha = max(((*node).alpha), temp_node.beta);
 			temp_node.eval = temp_node.beta;
 			if(temp_node.alpha >= temp_node.beta)
-				return moves[i];
-			if(min1 > temp_node.eval){
+				return moves[(random_ind+i)%(moves.size())];
+			if(min1 >= temp_node.eval){
 				min1 = temp_node.eval;
 				action_string = temp_string;
+				action_index = (random_ind+i)%(moves.size());
 			}
 		}
 
 		//(*node).eval = min;
 
-		return action_string;
+		return moves[action_index];
 	}
 
 	string miniMax(Node* node, int numb_ply){
@@ -809,22 +1031,24 @@ struct Node_prune{
 		return action;
 	}
 
-	string greedyBestStep(vector<string> valid_moves, Node* node, int weights[8]){   //state and pieces_count updated
+	string greedyBestStep(Node* node, int weights[8]){   //state and pieces_count updated
 		float temp_max = INT_MIN;
 		int temp_pieces_count[4];
 		copy(begin((*node).pieces_count), end((*node).pieces_count), begin(temp_pieces_count));
 		int final_pieces_count[4];
 		copy(begin((*node).pieces_count), end((*node).pieces_count), begin(final_pieces_count));
-
+		//cerr<<"greedy called"<<endl;
+		vector<string> valid_moves = getAllValidMoves((*node).state,my_player, 1);
 		vector<vector<int> > branch_state;
 		vector<vector<int> > best_state;
 		float temp_eval=0;	
 		int index_best=-1;
-
+		
+		int random_ind = rand()%(valid_moves.size());
 		for(int i=0; i<valid_moves.size(); i++){
 			// temp_pieces_count = (*node).pieces_count;
 			temp_pieces_count[0] = (*node).pieces_count[0]; temp_pieces_count[1] = (*node).pieces_count[1]; temp_pieces_count[2] = (*node).pieces_count[2]; temp_pieces_count[3] = (*node).pieces_count[3];
-			branch_state = update_state((*node).state, valid_moves[i],temp_pieces_count);  //doesn't change state but only the pieces_count
+			branch_state = update_state((*node).state, valid_moves[(random_ind+i)%(valid_moves.size())],temp_pieces_count);  //doesn't change state but only the pieces_count
 			// cerr<<"move "<<valid_moves[i]<<endl;
 			// printState(branch_state);
 			temp_eval = Evaluation_func(branch_state, temp_pieces_count, weights);
@@ -832,7 +1056,7 @@ struct Node_prune{
 			if(temp_max <= temp_eval){
 				temp_max = temp_eval;
 				best_state = branch_state;
-				index_best = i;
+				index_best = (random_ind+i)%(valid_moves.size());
 				// final_pieces_count = temp_pieces_count;
 				copy(begin(temp_pieces_count), end(temp_pieces_count), begin(final_pieces_count)); 
 			}
@@ -846,7 +1070,7 @@ struct Node_prune{
 			// }
 
 		}
-		cerr<<"best index"<<index_best<<endl;
+		//cerr<<"best index"<<index_best<<endl;
 		cerr<<valid_moves[index_best]<<endl;
 		// if(index_best<valid_moves.size()){
 			// (*node).state = best_state;
@@ -858,26 +1082,104 @@ struct Node_prune{
 
 	}
 
-	string myNextMove(Node* curr_node){
-		string next = "";
-	 	if(move_count<6){			//move greedily
-	 		cerr<<"greedy "<<move_count<<endl;
-		 	vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player,1);
-		 	cerr<<valid_moves[0]<<endl;
-		 	next = greedyBestStep(valid_moves, curr_node, weights);
-		 	// cerr<<next<<endl;
+	bool tower_danger(vector<vector<int> > state, int val){
+		bool t1;
+		if(my_player==1){
+			
+			if(state[0][0]==2){
+				t1 = canSquarebeAttacked(0,0,val,1);
+				if(t1)
+					return true;
+			}
+			
+			if(state[2][0]==2){
+				t1 = canSquarebeAttacked(2,0,val,1);
+				if(t1)
+					return true;
+			}
+
+			if(state[4][0]==2){
+				t1 = canSquarebeAttacked(4,0,val,1);
+				if(t1)
+					return true;
+			}
+
+			if(state[6][0]==2){
+				t1 = canSquarebeAttacked(6,0,val,1);
+				if(t1)
+					return true;
+			}
+			return false;
 		}
 		else{
-			printState((*curr_node).state);
-			if(move_count>=6 && move_count<=60){	//ply of 4
-				cerr<<"2 ply"<<endl;
-				next = miniMax(curr_node, 2);
-			} 
-			else if(move_count>40 && move_count<=100){ //ply of 6
-				next = miniMax(curr_node, 4);
+			if(state[1][7]==2){
+				t1 = canSquarebeAttacked(1,7,val,2);
+				if(t1)
+					return true;
+			}
+			
+			if(state[3][7]==2){
+				t1 = canSquarebeAttacked(3,7,val,2);
+				if(t1)
+					return true;
+			}
+
+			if(state[5][7]==2){
+				t1 = canSquarebeAttacked(5,7,val,2);
+				if(t1)
+					return true;
+			}
+
+			if(state[7][7]==2){
+				t1 = canSquarebeAttacked(7,7,val,2);
+				if(t1)
+					return true;
+			}
+			return false;	
+		}
+		return false;
+	}
+
+	string myNextMove(Node* curr_node){
+		string next = "";
+		if(!tower_danger((*curr_node).state,1)){
+		 	if(move_count<6 || tower_danger((*curr_node).state, -1)){			//move greedily
+		 		cerr<<"greedy "<<move_count<<endl;
+			 	//vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player,1);
+			 	// cerr<<valid_moves[0]<<endl;
+			 	//printState((*curr_node).state);
+			 	//cerr<<"cum cum"<<endl;
+			 	next = greedyBestStep(curr_node, weights);
+			 	// cerr<<next<<endl;
+			}
+			else if(true){
+				printState((*curr_node).state);
+				if(move_count>=6 && move_count<10){	//ply of 4
+					cerr<<"2 ply"<<endl;
+					next = miniMax(curr_node, 3);
+				} 
+				else if(move_count>=10 && move_count<40){	//ply of 4
+					cerr<<"3 ply"<<endl;
+					next = miniMax(curr_node, 4);
+				} 
+				else if(move_count>=40 && move_count<=100){ //ply of 6
+					next = miniMax(curr_node, 5);
+				}
 			}
 		}
+		else{
+			cerr<<"2 ply"<<endl;
+			next = miniMax(curr_node, 2);
+		}
+		cerr<<(next)<<" compare "<<last_move<<endl;
+		if(next.compare(last_move)==0){
+			cerr<<"kutta "<<endl;
+			vector<string> move = getAllValidMoves((*curr_node).state, my_player,1);
+			int ind = rand()%(move.size());
+			next = move[ind];
+		}
 		move_count+=2;
+		last_move = next;
 		return next;
 	}
 
@@ -892,6 +1194,7 @@ struct Node_prune{
 		cerr<< ID <<", "<<N<<endl;
 		// Board* newGame = new Board(N,M);
 		// Board* newGame;
+		srand ( time(NULL));
 		if(ID == 1)
 			player = 2;
 		else
