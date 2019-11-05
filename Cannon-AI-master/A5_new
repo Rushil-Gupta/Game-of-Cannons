@@ -697,7 +697,7 @@ struct Node_prune{
 		return answer;
 	}
 
-	vector<vector<int> > update_state(vector<vector<int> > state, string move, vector<int> piece_count){
+	vector<vector<int> > update_state(vector<vector<int> > state, string move, vector<int> &piece_count){
 		int coor[4];
 		int trav = 0;
 		char type;
@@ -1155,7 +1155,7 @@ struct Node_prune{
 		for(int i=0; i<moves.size(); i++){
 			temp_node = *node;
 			next_state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
-			temp_node.pieces_count = updatePieceCount(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			// temp_node.pieces_count = updatePieceCount(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
 			temp_node.state = next_state;
 			// cerr << numb_ply << " max ply left and value = "<<i<< endl;
 			temp_string = minValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
@@ -1199,7 +1199,7 @@ struct Node_prune{
 		for(int i=0; i<moves.size(); i++){
 			temp_node = *node;
 			next_state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
-			temp_node.pieces_count = updatePieceCount(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			// temp_node.pieces_count = updatePieceCount(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
 			temp_node.state = next_state;
 			// cerr << numb_ply << "min ply left and value = "<<i<< endl;
 			temp_string = maxValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
@@ -1245,7 +1245,7 @@ struct Node_prune{
 			// temp_pieces_count = (*node).pieces_count;
 			temp_pieces_count[0] = (*node).pieces_count[0]; temp_pieces_count[1] = (*node).pieces_count[1]; temp_pieces_count[2] = (*node).pieces_count[2]; temp_pieces_count[3] = (*node).pieces_count[3];
 			branch_state = update_state((*node).state, valid_moves[(random_ind+i)%(valid_moves.size())],temp_pieces_count);  //doesn't change state but only the pieces_count
-			temp_pieces_count = updatePieceCount((*node).state, valid_moves[(random_ind+i)%(valid_moves.size())],temp_pieces_count);  //doesn't change state but only the pieces_count
+			// temp_pieces_count = updatePieceCount((*node).state, valid_moves[(random_ind+i)%(valid_moves.size())],temp_pieces_count);  //doesn't change state but only the pieces_count
 			// cerr<<"move "<<valid_moves[i]<<endl;
 			// printState(branch_state);
 			cerr << "MOve is: " << valid_moves[i] << endl;
@@ -1425,7 +1425,7 @@ struct Node_prune{
 				string action_to_perform = myNextMove(&start);
 				old = board;
 				board = update_state(board,action_to_perform,start.pieces_count);
-				start.pieces_count = updatePieceCount(old, action_to_perform, (start.pieces_count));
+				// start.pieces_count = updatePieceCount(old, action_to_perform, (start.pieces_count));
 				// cout<"give action"<<endl;
 				cout << action_to_perform << endl;
 				string opp_move = "";
@@ -1438,7 +1438,7 @@ struct Node_prune{
 				}
 				old = board;
 				board = update_state(board,opp_move,start.pieces_count);
-				start.pieces_count = updatePieceCount(old, opp_move, (start.pieces_count));
+				// start.pieces_count = updatePieceCount(old, opp_move, (start.pieces_count));
 				start.state = board;
 				start.alpha = INT_MIN;
 				start.beta = INT_MAX;
@@ -1471,7 +1471,7 @@ struct Node_prune{
 				//cerr<<opp_move<<endl;
 				old = board;
 				board = update_state(board,opp_move,start.pieces_count);
-				start.pieces_count = updatePieceCount(old, opp_move, (start.pieces_count));
+				// start.pieces_count = updatePieceCount(old, opp_move, (start.pieces_count));
 				//cerr<<"updated"<<endl;
 				// printState(board);
 				start.state = board;
@@ -1487,7 +1487,7 @@ struct Node_prune{
 				// cerr << action_to_perform << endl;
 				old = board;
 				board = update_state(board,action_to_perform,start.pieces_count);
-				start.pieces_count = updatePieceCount(old, action_to_perform, (start.pieces_count));
+				// start.pieces_count = updatePieceCount(old, action_to_perform, (start.pieces_count));
 				// cout<"give action"<<endl;
 				cout << action_to_perform << endl;
 			}	
