@@ -4,21 +4,17 @@ using namespace std;
 
 int move_count = 0;
 vector<int> pieces_count{0,0,0,0};
-int weights[14] = {500,1000,-500,-1000,300,900,-400, -1500,50, 300,350,-150, -300, -350};
+int weights[8];
 int my_player=0;
 int opp_player=0;
 int player = 0; 
 string last_move = "";
 string sec_last_move = "";
 bool print_weight = false;
-int prev_score = INT_MAX;
-int score = 0;
-float learning_rate_inc = 0.6;
-float learning_rate_dec = 0.5;
 
 struct Node{
 	vector<vector<int> > state;
-	int siz = 4;
+	// int siz = 4;
 	vector<int> pieces_count{0,0,0,0};
 	float eval=0;
 	int alpha;
@@ -27,11 +23,14 @@ struct Node{
 
 struct Node_prune{
 	vector<vector<int> > state;
-	int siz = 4;
+	// int siz = 4;
 	vector<int> pieces_count{0,0,0,0};
 	float eval;
 };
 
+
+// class Board{
+// public:
 	vector<vector<int> > board;
 	// white originally
 	void Board(int n, int m){
@@ -42,7 +41,9 @@ struct Node_prune{
 		pieces_count[1] = m/2;
 		pieces_count[2] = (3*m)/2;
 		pieces_count[3] = m/2;
+		// opp_soldiers = 3 *()
 		if(player == 1){
+			// cerr << "Yo!" << endl;
 			tempVector1.push_back(1);
 			tempVector1.push_back(1);
 			tempVector1.push_back(1);
@@ -159,11 +160,13 @@ struct Node_prune{
 	bool is_opponent_adjacent(int sq_x, int sq_y, int val, int player){
 		if(sq_x > 0){
 			if(board[sq_x-1][sq_y] == val){
+				// cerr << "FOund0"<<sq_x-1<<" "<<sq_y << endl;
 				return true;
 			}
 		}
 		if(sq_x < board.size()-1){
 			if(board[sq_x+1][sq_y] == val){
+				// cerr << "FOund1" << endl;
 				return true;
 			}
 		}
@@ -184,16 +187,19 @@ struct Node_prune{
 		else{
 			if(sq_x > 0 && sq_y >0){
 				if(board[sq_x-1][sq_y-1] == val){
+					// cerr << "FOund2" << endl;
 					return true;
 				}
 			}
 			if(sq_y >0){
 				if(board[sq_x][sq_y-1] == val){
+					// cerr << "FOund3" << endl;
 					return true;
 				}
 			}
 			if(sq_x < board.size()-1 && sq_y > 0){
 				if(board[sq_x+1][sq_y-1] == val){
+					// cerr << "FOund4" << endl;
 					return true;
 				}
 			}	
@@ -404,10 +410,11 @@ struct Node_prune{
 					}
 				}
 			}
+			//cerr << "Yes!" << endl;
 		}
 
 			//cannon movement and bombing covered for possible cannons in all 8 directions
-		if(check_cannon(x,y,1,"LBD")){
+		if(check_cannon(x,y,val,"LBD")){
 			if(x-3 >= 0 &&  y+3 < board[0].size()){
 				if(board[x-3][y+3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x-3) + " " + to_string(y+3));
@@ -425,7 +432,9 @@ struct Node_prune{
 				}		
 			}
 		}
-		if(check_cannon(x,y,1,"BV")){
+
+		//cerr << "Yeah" << endl;
+		if(check_cannon(x,y,val,"BV")){
 			if(y+3 < board[0].size()){
 				if(board[x][y+3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x) + " " + to_string(y+3));
@@ -444,7 +453,8 @@ struct Node_prune{
 			}
 		}
 
-		if(check_cannon(x,y,1,"RBD")){
+		//cerr << "BV" << endl;
+		if(check_cannon(x,y,val,"RBD")){
 			if(x+3 < board.size() &&  y+3 < board[0].size()){
 				if(board[x+3][y+3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x+3) + " " + to_string(y+3));
@@ -463,7 +473,8 @@ struct Node_prune{
 			}
 		}
 
-		if(check_cannon(x,y,1,"RH")){
+		//cerr << "RBD" << endl;
+		if(check_cannon(x,y,val,"RH")){
 			if(x+3 < board.size()){
 				if(board[x+3][y] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x+3) + " " + to_string(y));
@@ -482,7 +493,8 @@ struct Node_prune{
 			}
 		}
 		
-		if(check_cannon(x,y,1,"RUD")){
+		//cerr << "RH" << endl;
+		if(check_cannon(x,y,val,"RUD")){
 			if(x+3 < board.size() &&  y-3 >=0){
 				if(board[x+3][y-3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x+3) + " " + to_string(y-3));
@@ -501,7 +513,8 @@ struct Node_prune{
 			}
 		}
 
-		if(check_cannon(x,y,1,"UV")){
+		//cerr << "RUD" << endl;
+		if(check_cannon(x,y,val,"UV")){
 			if(y-3 >=0){
 				if(board[x][y-3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x) + " " + to_string(y-3));
@@ -520,7 +533,8 @@ struct Node_prune{
 			}
 		}
 
-		if(check_cannon(x,y,1,"LUD")){
+		//cerr << "UV" << endl;
+		if(check_cannon(x,y,val,"LUD")){
 			if(x-3 >=0 &&  y-3 >=0){
 				if(board[x-3][y-3] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x-3) + " " + to_string(y-3));
@@ -539,7 +553,8 @@ struct Node_prune{
 			}
 		}
 
-		if(check_cannon(x,y,1,"LH")){
+		//cerr << "LUD" << endl;
+		if(check_cannon(x,y,val,"LH")){
 			if(x-3 >=0){
 				if(board[x-3][y] == 0)
 					moves.push_back("S " + to_string(x) + " " + to_string(y) + " M "+ to_string(x-3) + " " + to_string(y));
@@ -557,6 +572,7 @@ struct Node_prune{
 				}		
 			}
 		}	
+		//cerr << "LH" << endl;
 		return moves;
 	}
 
@@ -566,7 +582,7 @@ struct Node_prune{
 		 	for(int j =0; j<state[0].size();j++){
 		 		if(state[i][j] == val){
 		 			moves = getValidMovesForSoldier(state,i,j,player,val, moves);
-		 			cerr << i << " " << j << " " << endl;
+		 			// cerr << i << " " << j << " " << endl;
 		 		}
 		 	}
 		}
@@ -617,30 +633,41 @@ struct Node_prune{
 		else{
 			if(is_opponent_adjacent(sq_x, sq_y, (-1*val),2))
 				count++;
+			// cerr << "Adjacency: " << count << endl;
 		if(sq_x > 2){
 			if(check_cannon(sq_x-2,sq_y+2, (-1*val), "LBD") && board[sq_x-1][sq_y+1] == 0)
 				count++;
+			// cerr << "LBD1: " << count << endl; 
 			if(check_cannon(sq_x-3,sq_y+3, (-1*val), "LBD") && board[sq_x-2][sq_y+2] == 0)
 				count++;
+			// cerr << "LBD2: " << count << endl;
 			if(check_cannon(sq_x-2,sq_y, (-1*val), "LH") && board[sq_x-1][sq_y] == 0)
 				count++;
+			// cerr << "LH1: " << count << endl;
 			if(check_cannon(sq_x-3,sq_y, (-1*val), "LH") && board[sq_x-2][sq_y] == 0)
 				count++;
+			// cerr << "LH2: " << count << endl;
 		}
 		if(sq_x < board.size()-3){
 			if(check_cannon(sq_x+2,sq_y+2, (-1*val), "RBD") && board[sq_x+1][sq_y+1] == 0)
 				count++;
+			// cerr << "RBD1: " << count << endl;
 			if(check_cannon(sq_x+3,sq_y+3, (-1*val), "RBD") && board[sq_x+2][sq_y+2] == 0)
 				count++;
+			// cerr << "RBD2: " << count << endl;
 			if(check_cannon(sq_x+2,sq_y, (-1*val), "RH") && board[sq_x+1][sq_y] == 0)
 				count++;
+			// cerr << "RH1: " << count << endl;
 			if(check_cannon(sq_x+3,sq_y, (-1*val), "RH") && board[sq_x+2][sq_y] == 0)
 				count++;
+			// cerr << "RH2: " << count << endl;
 		}
 		if(check_cannon(sq_x,sq_y+2, (-1*val), "BV") && board[sq_x][sq_y+1] == 0)
 			count++;
+		// cerr << "Bv1: " << count << endl;
 		if(check_cannon(sq_x,sq_y+3, (-1*val), "BV") && board[sq_x][sq_y+2] == 0)
 			count++;
+		// cerr << "Bv2: " << count << endl;
 		}
 		return count;
 	}
@@ -650,6 +677,7 @@ struct Node_prune{
 		int m = state.size();
 		vector<int> answer;
 		if(player1 == 2){
+			// cerr<<"kutta "<<endl;
 			for(int i=0 ;i<m; i+= 2){
 				int count = 0;
 				if(abs(state[i][0]) == 2)
@@ -658,6 +686,7 @@ struct Node_prune{
 			}
 		}
 		else{
+			// cerr<<"kamina "<<endl;
 			for(int i=1 ;i<m; i+= 2){
 				int count = 0;
 				if(abs(state[i][7]) == 2)
@@ -672,17 +701,20 @@ struct Node_prune{
 		int coor[4];
 		int trav = 0;
 		char type;
+		//cerr<<move.length()<<endl;
 		for(int i=1; i<move.length();i++){
 			if(move[i] == ' ' && (move[i+1] != 'M' && move[i+1] != 'B')){
 				int j = i+1;
 				int num = 0;
 				while(j < move.length()){
+					//cerr << move[j] << endl;
 					if(move[j] == ' ')
 						break;
 					num = num*10 + (int)(move[j]-'0');
 					j++;
 				}
 				coor[trav] = num;
+				//cerr << j << endl;
 				if(j == move.length())
 					break;
 				i = j-1;
@@ -695,6 +727,7 @@ struct Node_prune{
 				i++;
 			}
 		}
+		//cerr << type << endl;
 		if(type == 'B'){
 			if(state[coor[0]][coor[1]] == 1){
 				if(state[coor[2]][coor[3]] == -1)
@@ -718,6 +751,7 @@ struct Node_prune{
 				else if(state[coor[2]][coor[3]] == -2)
 					piece_count[3]--;
 				state[coor[2]][coor[3]] = 1;
+				//cerr << " lag ja gale" << endl;
 				state[coor[0]][coor[1]] = 0;
 			}
 			else{
@@ -729,6 +763,7 @@ struct Node_prune{
 				state[coor[0]][coor[1]] = 0;
 			}	
 		}
+		//cerr << "Chal ja be" << endl;
 		return state;
 	}
 
@@ -938,7 +973,10 @@ struct Node_prune{
 		return ans;
 	}
 
-	int Evaluation_func(vector< vector<int> > state, vector<int> piece_count){
+	int Evaluation_func(vector< vector<int> > state, vector<int> piece_count, int* weights){
+		// int m = state.size();
+		// int n = state[0].size();
+
 		int s1 = piece_count[0];
 		int s2 = piece_count[2];
 		int t1 = piece_count[1];
@@ -956,6 +994,7 @@ struct Node_prune{
 			target_tower_us = opp_tower_attacks_possible(state,-1,2);
 		}
 		else{
+			// cerr << "Woah!" << endl;
 			target_soldier_opp = opp_soldiers_under_attack(state,1,2);
 			target_tower_opp = opp_tower_attacks_possible(state,1,2);	
 			target_soldier_us = opp_soldiers_under_attack(state,-1,1);
@@ -987,11 +1026,19 @@ struct Node_prune{
 				tower_attacks_sum_opp  = tower_attacks_sum_opp + target_tower_opp[i]-1;
 			}
 		}
-		int value = ((s1*weights[0]) + (t1*weights[1]) - (s2*weights[2]) - (t2*weights[3]));
-		value += ((target_soldier_opp*weights[4]) + (towers_at_risk_opp*weights[5]) - (target_soldier_us*weights[6]) - (towers_at_risk_us*weights[7]));
-		value += ((my_cannon_stats[0] * weights[8]) + (my_cannon_stats[1] * weights[9]) + (my_cannon_stats[2] * weights[10]));
-		value += ((opp_cannon_stats[0] * weights[11]) + (opp_cannon_stats[1] * weights[12]) + (opp_cannon_stats[2] * weights[13]));
-		cerr << "value "<<value<< endl;
+		// cerr<<"eval called"<<endl;
+		///GOOD VERSION OF WEIGHTS
+		// int value = ((s1*800) + (t1*3500) - (s2*800) - (t2*3200));
+		// value += ((target_soldier_opp*300) + (towers_at_risk_opp*900) - (target_soldier_us*300) - (towers_at_risk_us*5000));
+		// value += ((my_cannon_stats[0] * 100) + (my_cannon_stats[1] * 200) + (my_cannon_stats[2] * 200));
+		// value -= ((opp_cannon_stats[0] * 100) + (opp_cannon_stats[1] * 200) + (opp_cannon_stats[2] * 200));
+		//TRIAL WAALE WEIGHTS
+		int value = ((s1*1000) + (t1*6500) - (s2*1200) - (t2*3200));
+		value += ((target_soldier_opp*500) + (towers_at_risk_opp*1900) - (target_soldier_us*600) - (towers_at_risk_us*5000));
+		value += ((my_cannon_stats[0] * 200) + (my_cannon_stats[1] * 300) + (my_cannon_stats[2] * 400));
+		value -= ((opp_cannon_stats[0] * 200) + (opp_cannon_stats[1] * 300) + (opp_cannon_stats[2] * 400));
+		// cerr<<"Evaluation value:......................................\n";
+		// cerr << "value "<<value<< endl;
 
 		if(print_weight){
 			cerr<<"soldier us "<<s1<<endl;
@@ -1021,56 +1068,85 @@ struct Node_prune{
 	string minValue(Node* node, int numb_ply, string s);
 
 	string maxValue(Node* node, int numb_ply, string s){
-		if(numb_ply==0){
-			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count);
-			(*node).beta = (*node).eval;
+		
+		Node temp_node = *node;  //////////////////DOUBT
+		vector<string> moves = getAllValidMoves((*node).state, my_player,1);			
+		if(numb_ply==0 || moves.size() == 0){
+			// cerr << "Move to be played: " << s << endl;
+			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count,weights);
+			// cerr << "EVal value is: " << (*node).eval << endl;
+			(*node).alpha = (*node).eval;
+			// cerr << numb_ply << " max ply left" << endl;
 			return s;
 		}
 
-		Node temp_node = *node;
-		vector<string> moves = getAllValidMoves((*node).state, my_player,1);
 		float max1 = INT_MIN;
-		vector<vector<int> > next_state;
+		// vector<vector<int> > next_state;
 		vector<vector<int> > best_state;
 		int action_index=0;
 		string temp_string;
 		string action_string;
+		// cerr << "Check" << endl;
 		int random_ind = rand()%(moves.size());
+		// cerr << "CHick" << endl;
 		for(int i=0; i<moves.size(); i++){
 			temp_node = *node;
-			next_state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
-			temp_node.state = next_state;
+			temp_node.state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			// temp_node.pieces_count = updatePieceCount(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			// temp_node.state = next_state;
+			// cerr << numb_ply << " max ply left and value = "<<i<< endl;
+			// cerr << "Call to min" << endl;
 			temp_string = minValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
-			(*node).beta = min((*node).beta, temp_node.alpha);
-			cerr<<"MAX:................. \n";
-			cerr<<"Beta: "<<(*node).beta<<endl;
-			cerr<<"Alpha: "<<(*node).alpha<<endl;
-
-			temp_node.eval = temp_node.alpha;
-			if(temp_node.alpha >= temp_node.beta)
+			(*node).alpha = max((*node).alpha, temp_node.beta);
+			// cerr<<"MAX:................. \n";
+			// cerr<<"ply numb: "<<numb_ply<<endl;
+			// cerr<<"Beta: "<<(*node).beta<<endl;
+			// cerr<<"Alpha: "<<(*node).alpha<<endl;
+			// temp_node.eval = temp_node.beta;
+			if((*node).alpha >= (*node).beta){
+				// cerr<<"Pruned in MAX ////////////////////////////// \n";
 				return moves[(random_ind+i)%(moves.size())];
-			if(max1 <= temp_node.eval){
-				max1 = temp_node.eval;
-				best_state = next_state;
-				action_string = temp_string;
+			}
+			if(max1 < temp_node.beta){
+				// cerr << "Alpha value: " << (*node).alpha << " Max1 is: " << max1 << " ???????????????????" << endl;
+				max1 = temp_node.beta;
+				// best_state = temp_node.state;
+				// action_string = temp_string;
+
 				action_index = (random_ind+i)%(moves.size());
+				// cerr << "possible return move: " << moves[action_index] << endl;
 			}
 		}						
-		cerr << "MOve max: " << moves[action_index] << "Eval value" << max1 << endl;
+		
+		// cerr<<"MAX:................. \n";
+		// cerr<<"ply numb: "<<numb_ply<<endl;
+		// cerr<<"moves: "<<moves.size()<<endl;
+		// cerr<<"Beta: "<<(*node).beta<<endl;
+		// cerr<<"Alpha: "<<(*node).alpha<<endl;
+
+		// (*node).eval = max;
+		// (*node).state = next_state;
+		// cerr<<"ply numb: "<<numb_ply<<endl;
+		// cerr << "Move max: " << moves[action_index] << "Eval value" << max1 << endl;
 		return moves[action_index];
 	}
 
 	string minValue(Node* node, int numb_ply, string s){
-		if(numb_ply==0){
-			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count);
-			(*node).alpha = (*node).eval;
+		Node temp_node = (*node);
+		vector<string> moves = getAllValidMoves((*node).state, opp_player, -1);
+		if(numb_ply==0 || moves.size() == 0){
+			// cerr << "Woah bhai!" << endl;
+			// cerr << "MOve in min Part: " << s << endl;
+			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count,weights);
+			// cerr << "EVal value is in MIn: " << (*node).eval << endl;
+			(*node).beta = (*node).eval;
+			// cerr << numb_ply << " min ply left" << endl;
 			return s;
 		}
-
-		Node temp_node = *node;
-		vector<string> moves = getAllValidMoves((*node).state, opp_player, -1);
+		// printState()
+		
 		float min1 = INT_MAX;
-		vector<vector<int> > next_state;
+		// vector<vector<int> > next_state;
 		vector<vector<int> > best_state;
 		int action_index=0;
 		string temp_string;
@@ -1078,41 +1154,61 @@ struct Node_prune{
 		int random_ind = rand()%(moves.size());
 		for(int i=0; i<moves.size(); i++){
 			temp_node = *node;
-			next_state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
-			temp_node.state = next_state;
+			temp_node.state  = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			// temp_node.pieces_count = updatePieceCount(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			// temp_node.state = next_state;
+			// cerr << numb_ply << "min ply left and value = "<<i<< endl;
 			temp_string = maxValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
-			(*node).alpha = max(((*node).alpha), temp_node.beta);
-			cerr<<"MINI:................. \n";
-			cerr<<"Alpha: "<<(*node).alpha<<endl;
-			cerr<<"Beta: "<<(*node).beta<<endl;
+			// temp_node.eval = temp_node.alpha;
+			(*node).beta = min(((*node).beta), temp_node.alpha);
+			if((*node).alpha >= (*node).beta){
+				// cerr<<"Pruned in MIN ////////////////////////////// \n";
 
-			temp_node.eval = temp_node.beta;
-			if(temp_node.alpha >= temp_node.beta)
 				return moves[(random_ind+i)%(moves.size())];
-			if(min1 >= temp_node.eval){
-				min1 = temp_node.eval;
-				action_string = temp_string;
+			}
+			// cerr<<"MINI:................. \n";
+			// cerr<<"ply numb: "<<numb_ply<<endl;
+			// cerr<<"Alpha: "<<(*node).alpha<<endl;
+			// cerr<<"Beta: "<<(*node).beta<<endl;
+			if(min1 > temp_node.alpha){
+				min1 = temp_node.alpha;
+				// action_string = temp_string;
 				action_index = (random_ind+i)%(moves.size());
 			}
 		}
-		cerr << "MOve min: " << moves[action_index] << "Eval value" << min1 << endl;
+		// printState((*node).state);
+		// cerr<<"MIN:................. \n";
+		// cerr<<"moves: "<<moves.size()<<endl;
+		// cerr<<"ply numb: "<<numb_ply<<endl;
+		// cerr<<"Beta: "<<(*node).beta<<endl;
+		// cerr<<"Alpha: "<<(*node).alpha<<endl;
+		//(*node).eval = min;
+		
+		// cerr<<"ply numb: "<<numb_ply<<endl;
+
+		// cerr << "Move min: " << moves[action_index] << "Eval value" << min1 << endl;
 		return moves[action_index];
 	}
 
 	string miniMax(Node* node, int numb_ply){
+		cerr<<"Move count----------------------------------------- "<< move_count <<"-----------------------------------------------"<<endl;
+		(*node).alpha = INT_MIN;
+		(*node).beta = INT_MAX;
 		string action = maxValue(node, numb_ply,"");
 		// value already updated in node
+		
 		cerr<<"action "<<action<<endl;
 		return action;
 	}
 
-	string greedyBestStep(Node* node){   //state and pieces_count updated
+	string greedyBestStep(Node* node, int weights[8]){   //state and pieces_count updated
 		float temp_max = INT_MIN;
 		vector<int> temp_pieces_count(4,0);
 		copy(begin((*node).pieces_count), end((*node).pieces_count), begin(temp_pieces_count));
 		vector<int> final_pieces_count(4,0);
 
 		copy(begin((*node).pieces_count), end((*node).pieces_count), begin(final_pieces_count));
+		//cerr<<"greedy called"<<endl;
 		vector<string> valid_moves = getAllValidMoves((*node).state,my_player, 1);
 		vector<vector<int> > branch_state;
 		vector<vector<int> > best_state;
@@ -1121,22 +1217,44 @@ struct Node_prune{
 		
 		int random_ind = rand()%(valid_moves.size());
 		for(int i=0; i<valid_moves.size(); i++){
+			// temp_pieces_count = (*node).pieces_count;
 			temp_pieces_count[0] = (*node).pieces_count[0]; temp_pieces_count[1] = (*node).pieces_count[1]; temp_pieces_count[2] = (*node).pieces_count[2]; temp_pieces_count[3] = (*node).pieces_count[3];
 			branch_state = update_state((*node).state, valid_moves[(random_ind+i)%(valid_moves.size())],temp_pieces_count);  //doesn't change state but only the pieces_count
-			cerr << "MOve is: " << valid_moves[(random_ind+i)%(valid_moves.size())] << endl;
-			temp_eval = Evaluation_func(branch_state, temp_pieces_count);
+			// temp_pieces_count = updatePieceCount((*node).state, valid_moves[(random_ind+i)%(valid_moves.size())],temp_pieces_count);  //doesn't change state but only the pieces_count
+			// cerr<<"move "<<valid_moves[i]<<endl;
+			// printState(branch_state);
+			// cerr << "Move is: " << valid_moves[(random_ind+i)%(valid_moves.size())] << endl;
+			temp_eval = Evaluation_func(branch_state, temp_pieces_count, weights);
+			// cerr<<"temp_eval "<<temp_eval<<endl;
 			if(temp_max <= temp_eval){
 				temp_max = temp_eval;
-				cerr<<"temp max: "<<temp_max<<endl;
+				// cerr<<"temp max: "<<temp_max<<endl;
 				best_state = branch_state;
 				index_best = (random_ind+i)%(valid_moves.size());
+				// final_pieces_count = temp_pieces_count;
+
 				copy(begin(temp_pieces_count), end(temp_pieces_count), begin(final_pieces_count)); 
 			}
 
+			// if(max_eval < temp_eval){
+			// 	max_eval = temp_eval;
+			// 	index_best = i;
+			// 	// best_state = branch_state;
+			// 	// final_pieces_count = temp_pieces_count; 
+			// 	break;
+			// }
+
 		}
-		cerr<<valid_moves[index_best]<<endl;
+		//cerr<<"best index"<<index_best<<endl;
+		// cerr<<valid_moves[index_best]<<endl;
+		// if(index_best<valid_moves.size()){
+			// (*node).state = best_state;
+			// copy(begin(final_pieces_count), end(final_pieces_count), begin((*node).pieces_count)); 
+			// (*node).pieces_count = final_pieces_count;
 			(*node).eval = temp_max;
 			return valid_moves[index_best];
+		// }
+
 	}
 
 	bool tower_danger(vector<vector<int> > state, int val){
@@ -1199,25 +1317,48 @@ struct Node_prune{
 
 	string myNextMove(Node* curr_node){
 		string next = "";
+		vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player, 1);
+		
+		// if(!tower_danger((*curr_node).state,1)){
 		 	// if(move_count<6 || tower_danger((*curr_node).state, -1) || tower_danger((*curr_node).state,1)){			//move greedily
 		 	if(move_count<6){			//move greedily
 
-			 	next = greedyBestStep(curr_node);
+		 		// cerr<<"greedy "<<move_count<<endl;
+			 	//vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player,1);
+			 	// cerr<<valid_moves[0]<<endl;
+			 	//printState((*curr_node).state);
+			 	//cerr<<"cum cum"<<endl;
+			 	next = greedyBestStep(curr_node, weights);
+					// next = miniMax(curr_node, 2);
+
+			 	// cerr<<next<<endl;
 			}
 			else if(true){
+				// printState((*curr_node).state);
 				if(move_count>=6 && move_count<10){	//ply of 4
 					cerr<<"2 ply"<<endl;
-					next = miniMax(curr_node, 10);
+					next = miniMax(curr_node, 2);
 				} 
 				else if(move_count>=10 && move_count<40){	//ply of 4
-					cerr<<"3 ply"<<endl;
-					next = miniMax(curr_node, 10);
+					cerr<<"4 ply"<<endl;
+					next = miniMax(curr_node, 4);
 				} 
-				else if(move_count>=40 && move_count<=100){ //ply of 6
-					next = miniMax(curr_node, 12);
+				else if(move_count>=40 && move_count<=100 && valid_moves.size()<10){ //ply of 6
+					next = miniMax(curr_node, 6);
+				}
+				else{
+					cerr<<"4 ply"<<endl;
+					next = miniMax(curr_node, 4);
 				}
 			}
+		// }
+		// else{
+		// 	// cerr<<"2 ply"<<endl;
+		// 	next = miniMax(curr_node, 2);
+		// }
+		// cerr<<(next)<<" compare "<<last_move<<endl;
 		if(next.compare(last_move)==0 || next.compare(sec_last_move)==0){
+			// cerr<<"kutta "<<endl;
 			vector<string> move = getAllValidMoves((*curr_node).state, my_player,1);
 			int ind = rand()%(move.size());
 			next = move[ind];
@@ -1228,45 +1369,33 @@ struct Node_prune{
 		return next;
 	}
 
-void updateWeights(int new_score, int prev_score){
-	if(new_score > prev_score){
-		for(int i=0 ;i<14; i++){
-			if(weights[i] > 0)
-				weights[i] += (int)(weights[i] * learning_rate_inc);
-			if(weights[i] < 0)
-				weights[i] += (int)((-1) *(weights[i] * learning_rate_inc));
-		}
-		learning_rate_inc -= ( 1/( 1+ exp(move_count/10)));
-	}
-	else{
-		for(int i=0 ;i<14; i++){
-			if(weights[i] < 0)
-				weights[i] += (int)(weights[i] * learning_rate_dec);
-			if(weights[i] > 0)
-				weights[i] += (int)((-1) *(weights[i] * learning_rate_dec));
-		}
-		learning_rate_dec -= ( 1/( 1+ exp(move_count/10)));
-	}
-}
 
 	int main(){
 		int ID;
 		int N;
 		int M; 
 		int t;
+		// cerr<< "hi" <<endl;
 		cin >> ID >> N >> M >> t;
 		vector<vector<int> > old;
+		// cerr<< ID <<", "<<N<<endl;
+		// Board* newGame = new Board(N,M);
+		// Board* newGame;
 		srand ( time(NULL));
 		if(ID == 1)
 			player = 2;
 		else
 			player = 1;
 		Board(N,M);
+		// cout<<"Hello guys"<<endl;
 		if(ID == 1){
 			player = 2;
 			my_player = 2;
 			opp_player = 1;
-			cerr << "Rushil" << endl;
+			// cerr<< "hi 1" <<endl;
+			// cout<<"pls come 1"<<endl;
+			// newGame->printState();
+			// cerr << "Rushil" << endl;
 			Node start;
 			start.state = board;
 			start.alpha = INT_MIN;
@@ -1274,14 +1403,17 @@ void updateWeights(int new_score, int prev_score){
 			start.eval = start.alpha;
 			copy(begin(pieces_count), end(pieces_count), begin(start.pieces_count));
 			while(1){
-				printState(board);
+				// printState(board);
 				// print_weight = true;
-				// score = Evaluation_func(board, pieces_count);
-				// print_weight = false;
+				Evaluation_func(board, pieces_count, weights);
+				print_weight = false;
+
 				string action_to_perform = myNextMove(&start);
 				old = board;
 				board = update_state(board,action_to_perform,start.pieces_count);
+				// start.pieces_count = updatePieceCount(old, action_to_perform, (start.pieces_count));
 				pieces_count = start.pieces_count;
+				// cout<"give action"<<endl;
 				cout << action_to_perform << endl;
 				string opp_move = "";
 				string read = "";
@@ -1293,12 +1425,7 @@ void updateWeights(int new_score, int prev_score){
 				}
 				old = board;
 				board = update_state(board,opp_move,start.pieces_count);
-				print_weight = true;
-				score = Evaluation_func(board, pieces_count);
-				print_weight = false;
-				if(prev_score != INT_MAX && prev_score != score)
-					updateWeights(score,prev_score);
-				prev_score = score;
+				// start.pieces_count = updatePieceCount(old, opp_move, (start.pieces_count));
 				pieces_count = start.pieces_count;
 				start.state = board;
 				start.alpha = INT_MIN;
@@ -1307,9 +1434,12 @@ void updateWeights(int new_score, int prev_score){
 			}
 		}
 		else{
+			// cerr<< "hi 2" <<endl;
 			player = 1;
 			my_player = 1;
 			opp_player = 2;
+			// newGame->printState();
+			// cout<<"pls come 2"<<endl;
 			
 			Node start;
 			start.state = board;
@@ -1326,26 +1456,32 @@ void updateWeights(int new_score, int prev_score){
 					cin >> read;
 					opp_move += " " + read;
 				}
+				//cerr<<opp_move<<endl;
 				old = board;
 				board = update_state(board,opp_move,start.pieces_count);
+				// start.pieces_count = updatePieceCount(old, opp_move, (start.pieces_count));
 				pieces_count = start.pieces_count;
+				//cerr<<"updated"<<endl;
+				// printState(board);
 				start.state = board;
 				start.alpha = INT_MIN;
 				start.beta = INT_MAX;
 				start.eval = start.alpha;
 				printState(board);
+				
+				// print_weight = true;
+				Evaluation_func(board, pieces_count, weights);
+				print_weight = false;
 				string action_to_perform = myNextMove(&start);
+				// cerr << action_to_perform << endl;
 				old = board;
 				board = update_state(board,action_to_perform,start.pieces_count);
-				print_weight = true;
-				score = Evaluation_func(board, pieces_count);
-				print_weight = false;
-				if(prev_score != INT_MAX && prev_score != score)
-					updateWeights(score,prev_score);
-				prev_score = score;
+				// start.pieces_count = updatePieceCount(old, action_to_perform, (start.pieces_count));
 				pieces_count = start.pieces_count;
+				// cout<"give action"<<endl;
 				cout << action_to_perform << endl;
 			}	
 		}
 		return 0;
 	}
+// };
