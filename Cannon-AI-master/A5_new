@@ -32,7 +32,7 @@ struct Node_prune{
 // class Board{
 // public:
 	vector<vector<int> > board;
-	// white originally
+	// white originally //
 	void Board(int n, int m){
 		vector<int> tempVector1;
 		vector<int> tempVector2;
