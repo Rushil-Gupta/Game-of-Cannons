@@ -1037,18 +1037,20 @@ struct Node_prune{
 		temp_node_move.node = (*node);
 		temp_node_move.move = "";
 
-		cerr<<"Intelligent Prune ----------------------------- \n";
+		// cerr<<"Prune MOVES: "<<moves.size()<<endl;
+		// cerr<<"Intelligent Prune -----------------------------"<<numb_ply<<endl;
 		vector<NodeMove> next_node(moves.size(), temp_node_move);
 		for(int i=0; i<moves.size(); i++){
+			next_node[i].node = (*node);
 			next_node[i].move = moves[i];
 			next_node[i].node.state = update_state(next_node[i].node.state, moves[i], (next_node[i].node.pieces_count));
-			(next_node[i]).node.eval = Evaluation_func(next_node[i].node.state, next_node[i].node.pieces_count,weights);
+			next_node[i].node.eval = Evaluation_func(next_node[i].node.state, next_node[i].node.pieces_count,weights);
 		}
 
 		sort(next_node.begin(), next_node.end(), compareStates_dec);
 		//Intelligent pruning......................................................................
 		
-
+		// cerr<<"Max SORETD!! "<<next_node.size()<<endl;
 		float max1 = INT_MIN;
 		vector<vector<int> > best_state;
 		int action_index=0;
@@ -1058,9 +1060,16 @@ struct Node_prune{
 		for(int i=0; i<next_node.size(); i++){
 			// temp_node = *node;
 			// temp_node.state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			next_node[i].node.alpha = (*node).alpha;
+			next_node[i].node.beta = (*node).beta; 
+
 			temp_string = minValue(&(next_node[i].node), numb_ply-1, next_node[i].move);
+			// next_node[i].node.eval = next_node[i].node.beta;
 			(*node).alpha = max((*node).alpha, next_node[i].node.beta);
+			// cerr<<"MAX- \n";
+			// cerr<<"alpha  "<<(*node).alpha<<" beta: "<<(*node).beta<<endl;
 			if((*node).alpha >= (*node).beta){
+				// cerr<<"MAX PRUNED!!! \n";
 				return next_node[i].move;
 			}
 			if(max1 < next_node[i].node.beta){
@@ -1088,7 +1097,7 @@ struct Node_prune{
 		temp_node_move.node = (*node);
 		temp_node_move.move = "";
 
-		cerr<<"Intelligent Prune ----------------------------- \n";
+		// cerr<<"Intelligent Prune -----------------------------"<<numb_ply<<endl;
 		vector<NodeMove> next_node(moves.size(), temp_node_move);
 		for(int i=0; i<moves.size(); i++){
 			next_node[i].move = moves[i];
@@ -1098,7 +1107,8 @@ struct Node_prune{
 
 		sort(next_node.begin(), next_node.end(), compareStates_inc);
 		//Intelligent pruning......................................................................
-		
+		// cerr<<"MIN SORTED"<<next_node.size()<<endl;
+				
 		float min1 = INT_MAX;
 		vector<vector<int> > best_state;
 		int action_index=0;
@@ -1108,9 +1118,16 @@ struct Node_prune{
 		for(int i=0; i<next_node.size(); i++){
 			// temp_node = *node;
 			// temp_node.state  = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			next_node[i].node.alpha = (*node).alpha;
+			next_node[i].node.beta = (*node).beta;
 			temp_string = maxValue(&(next_node[i].node), numb_ply-1, next_node[i].move);
+			// next_node[i].node.eval = next_node[i].node.alpha;
 			(*node).beta = min(((*node).beta), next_node[i].node.alpha);
+			// cerr<<"MIN- \n";
+			// cerr<<"alpha  "<<(*node).alpha<<" beta: "<<(*node).beta<<endl;
+			
 			if((*node).alpha >= (*node).beta){
+				// cerr<<"MIN PRUNED!! \n";
 				return next_node[i].move;
 			}
 			if(min1 > next_node[i].node.alpha){
@@ -1188,18 +1205,21 @@ struct Node_prune{
 	string myNextMove(Node* curr_node){
 		string next = "";
 		vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player, 1);
-		 	if(move_count<6){			//move greedily
-			 	next = greedyBestStep(curr_node, weights);
+		 	if(move_count<10){			//move greedily
+			 	// next = greedyBestStep(curr_node, weights);
+					cerr<<"2 ply"<<endl;
+			 	
+			 	next = miniMax(curr_node, 2);
 			}
 			else if(true){
-				if(move_count>=6 && move_count<200){	//ply of 4
-					cerr<<"2 ply"<<endl;
+				if(move_count>=10 && move_count<50){	//ply of 4
+					cerr<<"4 ply"<<endl;
 					next = miniMax(curr_node, 4);
 				} 
-				// else if(move_count>=10 && move_count<40){	//ply of 4
-				// 	cerr<<"4 ply"<<endl;
-				// 	next = miniMax(curr_node, 2);
-				// } 
+				else if(move_count>=50){	//ply of 4
+					cerr<<"6 ply"<<endl;
+					next = miniMax(curr_node, 6);
+				} 
 				// else if(move_count>=40 && move_count<=100 && valid_moves.size()<10){ //ply of 6
 				// 	next = miniMax(curr_node, 3);
 				// }
