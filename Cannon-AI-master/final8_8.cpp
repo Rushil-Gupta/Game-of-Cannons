@@ -4,7 +4,7 @@ using namespace std;
 		
 int move_count = 0;
 vector<int> pieces_count{0,0,0,0};
-int weights[14] = {1000,6500,-1200,-4000,500,1900,-700, -5000,200, 300,400,-200, -300, -400};
+int weights[14] = {1000,6500,-1200,-4000,500,2500,-700, -5000,200, 300,400,-200, -300, -400};
 // int weights[14] = {1000,6500,-1200,-3200,61,226,-1000, -7157,25, 37,49,-285, -430, -570};
 
 int my_player=0;
@@ -19,7 +19,7 @@ float learning_rate_inc = 0.3;
 float learning_rate_dec = 0.3;
 bool update_soldier_weight = true;
 bool update_tower_weight = true;
-
+bool update_hori_weight = true;
 struct Node{
 	vector<vector<int> > state;
 	vector<int> pieces_count{0,0,0,0};
@@ -1357,22 +1357,22 @@ struct Node_prune{
 	string myNextMove(Node* curr_node){
 		string next = "";
 		vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player, 1);
-		 	if(move_count<16){			//move greedily
-			 	// next = greedyBestStep(curr_node, weights);
+		 	if(move_count<8){			//move greedily
+			 	next = greedyBestStep(curr_node, weights);
 					// cerr<<"2 ply"<<endl;
 			 	
-			 	next = miniMax(curr_node, 2);
+			 	// next = miniMax(curr_node, 2);
 			}
 			else if(true){
 				if(pieces_count[0] <= 3){
 					cerr<<"8 ply"<<endl;
 					next = miniMax(curr_node, 6);
 				}
-				else if(move_count>=16 && move_count<40){	//ply of 4
+				else if(move_count>=8 && move_count<20){	//ply of 4
 					cerr<<"4 ply"<<endl;
 					next = miniMax(curr_node, 2);
 				} 
-				else if(move_count>=40 && move_count < 60){	//ply of 4
+				else if(move_count>=20 && move_count < 40){	//ply of 4
 					cerr<<"6 ply"<<endl;
 					next = miniMax(curr_node, 4);
 				}
@@ -1401,22 +1401,33 @@ struct Node_prune{
 
 	void updateWeights(int new_score, int prev_score){
 	cerr << "New Score: " << new_score << " PUrana kya hai bhai: " << prev_score << endl;
+	vector<int> thresh_high{1000,3500,-500,-3000,500,500,500,-100,-100,-100};
+	vector<int> thresh_low{200,2000,-1000,-6000,100,100,100,-500,-500,-500};
+
 	if(new_score < prev_score){
 		cerr << "????????????????????????? WOah bhai WAAH!???????????????????????????" << endl;
 		for(int i=4 ;i<14; i++){
-			if(weights[i] < 0)
+			if(weights[i] < 0){
 				weights[i] += (int)((-1) * weights[i] * learning_rate_inc);
-			if(weights[i] > 0)
+				weights[i] = max(min(weights[i], thresh_high[i-4]), thresh_low[i-4]);
+			}
+			if(weights[i] > 0){
 				weights[i] += (int)((weights[i] * learning_rate_inc));
+				weights[i] = max(min(weights[i], thresh_high[i-4]), thresh_low[i-4]);
+			}
 		}
 		learning_rate_inc -= 0.005;
 	}
 	else{
 		for(int i=4 ;i<14; i++){
-			if(weights[i] > 0)
+			if(weights[i] > 0){
 				weights[i] += (int)((-1) *(weights[i] * learning_rate_dec));
-			if(weights[i] < 0)
+				weights[i] = max(min(weights[i], thresh_high[i-4]), thresh_low[i-4]);
+			}
+			if(weights[i] < 0){
 				weights[i] += (int)((weights[i] * learning_rate_dec));
+				weights[i] = max(min(weights[i], thresh_high[i-4]), thresh_low[i-4]);
+			}
 		}
 		learning_rate_dec -= 0.005;
 	}
@@ -1429,6 +1440,11 @@ struct Node_prune{
 		update_tower_weight  =false;
 		weights[3] -= 500;
 	}
+	// if(pieces_count[1] < 4 && update_hori_weight){
+	// 	update_hori_weight  =false;
+	// 	weights[8] += 250;	
+	// }
+	
 	printState(board);
 	cerr << " Weights begin: -----------------------------------" << endl;
 	for(int i=0; i<14;i++){
