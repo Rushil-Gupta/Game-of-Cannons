@@ -4,7 +4,9 @@ using namespace std;
 		
 int move_count = 0;
 vector<int> pieces_count{0,0,0,0};
-int weights[14] = {1000,6500,-1200,-3200,500,1900,-700, -5000,200, 300,400,-200, -300, -400};
+int weights[14] = {1000,6500,-1200,-4000,500,1900,-700, -5000,200, 300,400,-200, -300, -400};
+// int weights[14] = {1000,6500,-1200,-3200,61,226,-1000, -7157,25, 37,49,-285, -430, -570};
+
 int my_player=0;
 int opp_player=0;
 int player = 0; 
@@ -15,6 +17,8 @@ int prev_score = INT_MAX;
 int score = 0;
 float learning_rate_inc = 0.3;
 float learning_rate_dec = 0.3;
+bool update_soldier_weight = true;
+bool update_tower_weight = true;
 
 struct Node{
 	vector<vector<int> > state;
@@ -29,6 +33,11 @@ struct Node_prune{
 	vector<int> pieces_count{0,0,0,0};
 	float eval;
 };
+
+	struct NodeMove{
+		Node node;
+		string move;
+	};
 
 	vector<vector<int> > board;
 	void Board(int n, int m){
@@ -560,10 +569,15 @@ struct Node_prune{
 
 	vector<string> getAllValidMoves(vector<vector<int> > state, int player, int val){
 		vector<string> moves;
+		int rand_num_i = rand()%(state.size());
+		int rand_num_j = rand()%(state[0].size());
+
 		for(int i=0; i<state.size();i++){
 		 	for(int j =0; j<state[0].size();j++){
-		 		if(state[i][j] == val){
-		 			moves = getValidMovesForSoldier(state,i,j,player,val, moves);
+		 		int ind1 = (rand_num_i+i)%(state.size());
+		 		int ind2 = (rand_num_j+j)%(state[0].size());
+		 		if(state[ind1][ind2] == val){
+		 			moves = getValidMovesForSoldier(state,ind1,ind2,player,val, moves);
 		 		}
 		 	}
 		}
@@ -1010,41 +1024,212 @@ struct Node_prune{
 		return value;
 	}
 
-	string minValue(Node* node, int numb_ply, string s);
+	bool compareStates_inc(NodeMove n1, NodeMove n2) 
+	{ 
+		return (n1.node.eval < n2.node.eval); 
+	} 
 
-	string maxValue(Node* node, int numb_ply, string s){
+	bool compareStates_dec(NodeMove n1, NodeMove n2) 
+	{ 
+		return (n1.node.eval > n2.node.eval); 
+	} 
+ 
+
+	// string minValue(Node* node, int numb_ply, string s);
+
+	// string maxValue(Node* node, int numb_ply, string s){
+		
+	// 	Node temp_node = *node;  
+	// 	vector<string> moves = getAllValidMoves((*node).state, my_player,1);	
+	// 	if(moves.size()==0){
+	// 		cerr<<"I have no move left \n";
+	// 	}		
+	// 	if(numb_ply==0 || moves.size() == 0){
+	// 		(*node).eval = Evaluation_func((*node).state,(*node).pieces_count);
+	// 		(*node).alpha = (*node).eval;
+	// 		return s;
+	// 	}
+
+	// 	//Intelligent pruning......................................................................
+	// 	NodeMove temp_node_move;
+	// 	temp_node_move.node = (*node);
+	// 	temp_node_move.move = "";
+
+	// 	// cerr<<"Prune MOVES: "<<moves.size()<<endl;
+	// 	// cerr<<"Intelligent Prune -----------------------------"<<numb_ply<<endl;
+	// 	vector<NodeMove> next_node(moves.size(), temp_node_move);
+	// 	for(int i=0; i<moves.size(); i++){
+	// 		next_node[i].node = (*node);
+	// 		next_node[i].move = moves[i];
+	// 		next_node[i].node.state = update_state(next_node[i].node.state, moves[i], (next_node[i].node.pieces_count));
+	// 		next_node[i].node.eval = Evaluation_func(next_node[i].node.state, next_node[i].node.pieces_count);
+	// 	}
+
+	// 	sort(next_node.begin(), next_node.end(), compareStates_dec);
+	// 	//Intelligent pruning......................................................................
+		
+	// 	// cerr<<"Max SORETD!! "<<next_node.size()<<endl;
+	// 	float max1 = INT_MIN;
+	// 	vector<vector<int> > best_state;
+	// 	int action_index=0;
+	// 	string temp_string;
+	// 	string action_string;
+	// 	int random_ind = rand()%(moves.size());
+	// 	for(int i=0; i<next_node.size(); i++){
+	// 		// temp_node = *node;
+	// 		// temp_node.state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+	// 		next_node[i].node.alpha = (*node).alpha;
+	// 		next_node[i].node.beta = (*node).beta; 
+
+	// 		temp_string = minValue(&(next_node[i].node), numb_ply-1, next_node[i].move);
+	// 		// next_node[i].node.eval = next_node[i].node.beta;
+	// 		(*node).alpha = max((*node).alpha, next_node[i].node.beta);
+	// 		// cerr<<"MAX- \n";
+	// 		// cerr<<"alpha  "<<(*node).alpha<<" beta: "<<(*node).beta<<endl;
+	// 		if((*node).alpha >= (*node).beta){
+	// 			// cerr<<"MAX PRUNED!!! \n";
+	// 			return next_node[i].move;
+	// 		}
+	// 		if(max1 < next_node[i].node.beta){
+	// 			max1 = next_node[i].node.beta;
+	// 			action_index = i;
+	// 		}
+	// 	}						
+	// 	return next_node[action_index].move;
+	// }
+
+	string minValue(Node* node, int numb_ply, string s);
+	string maxValue(Node* node, int numb_ply, string s, bool return_step);
+ 	
+ 	string heuristic_choose(vector<NodeMove> top_states, int numb_ply){				//.will always be called from the maxVal
+ 		int index=0;
+		int best_eval=INT_MIN;
+		string temp_string = "";
+
+		for(int i=0 ;i<top_states.size(); i++){
+			temp_string = minValue(&(top_states[i].node), numb_ply+1, top_states[i].move);
+			cerr<<"HEURESTIC : "<<top_states[i].move<<" has eval: "<<top_states[i].node.beta<<endl;
+			if(best_eval < top_states[i].node.beta){
+				best_eval = top_states[i].node.beta;
+				index = i;
+			}
+		}
+
+		return  top_states[index].move;
+		
+	}
+
+	// string  heuristic_choose(vector<NodeMove> top_states){
+	// 	int index;
+	// 	int best_y=0;
+	// 	if(player==1){				//white n so y max
+	// 		best_y = -1;
+	// 		for(int i=0; i<top_states.size(); i++){
+	// 		cerr<<"Print move type P1: "<< top_states[i].move<< " eval: "<< top_states[i].node.eval<< endl;
+
+	// 			if(top_states[i].move[6]=='M'){
+	// 				if(best_y<(int)top_states[i].move[10] - 48){
+	// 					best_y = (int)top_states[i].move[10] - 48;
+	// 					index = i;
+	// 				}
+	// 			}
+	// 		}
+
+	// 		if(best_y == -1){
+	// 			index = 0;
+	// 		}
+	// 	}
+	// 	else{
+	// 		best_y = 10000;
+	// 		for(int i=0; i<top_states.size(); i++){
+	// 		cerr<<"Print move type P2: "<< top_states[i].move<< " eval: "<< top_states[i].node.eval<< endl;
+
+	// 			if(top_states[i].move[6]=='M'){
+	// 				if(best_y>(int)top_states[i].move[10] - 48){
+	// 					best_y = (int)top_states[i].move[10] - 48;
+	// 					index = i;
+	// 				}
+	// 			}
+	// 		}
+	// 		if(best_y == 10000){
+	// 			index = 0;
+	// 		}	
+	// 	}
+	// 	cerr<<"END HUE................................................... \n";
+	// 	return top_states[index].move;
+	// }
+
+	string maxValue(Node* node, int numb_ply, string s, bool return_step){
 		
 		Node temp_node = *node;  
 		vector<string> moves = getAllValidMoves((*node).state, my_player,1);	
 		if(moves.size()==0){
-			cout<<"I have no move left \n";
+			cerr<<"I have no move left \n";
 		}		
-		if(numb_ply==0 || moves.size() == 0){
+		if(numb_ply==0 || moves.size() == 0 || (*node).pieces_count[1]<=2){
 			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count);
 			(*node).alpha = (*node).eval;
 			return s;
 		}
 
+		//Intelligent pruning......................................................................
+		NodeMove temp_node_move;
+		temp_node_move.node = (*node);
+		temp_node_move.move = "";
+
+		// cerr<<"Prune MOVES: "<<moves.size()<<endl;
+		// cerr<<"Intelligent Prune -----------------------------"<<numb_ply<<endl;
+		vector<NodeMove> next_node(moves.size(), temp_node_move);
+		for(int i=0; i<moves.size(); i++){
+			next_node[i].node = (*node);
+			next_node[i].move = moves[i];
+			next_node[i].node.state = update_state(next_node[i].node.state, moves[i], (next_node[i].node.pieces_count));
+			next_node[i].node.eval = Evaluation_func(next_node[i].node.state, next_node[i].node.pieces_count);
+		}
+
+		sort(next_node.begin(), next_node.end(), compareStates_dec);
+		//Intelligent pruning......................................................................
+		
+		// cerr<<"Max SORETD!! "<<next_node.size()<<endl;
 		float max1 = INT_MIN;
 		vector<vector<int> > best_state;
+		vector<NodeMove> top_states;
 		int action_index=0;
 		string temp_string;
 		string action_string;
 		int random_ind = rand()%(moves.size());
-		for(int i=0; i<moves.size(); i++){
-			temp_node = *node;
-			temp_node.state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
-			temp_string = minValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
-			(*node).alpha = max((*node).alpha, temp_node.beta);
+		for(int i=0; i<next_node.size(); i++){
+			// temp_node = *node;
+			// temp_node.state = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			next_node[i].node.alpha = (*node).alpha;
+			next_node[i].node.beta = (*node).beta; 
+
+			temp_string = minValue(&(next_node[i].node), numb_ply-1, next_node[i].move);
+			next_node[i].node.eval = next_node[i].node.beta;
+			(*node).alpha = max((*node).alpha, next_node[i].node.beta);
+			// cerr<<"MAX- \n";
+			// cerr<<"alpha  "<<(*node).alpha<<" beta: "<<(*node).beta<<endl;
 			if((*node).alpha >= (*node).beta){
-				return moves[(random_ind+i)%(moves.size())];
+				// cerr<<"MAX PRUNED!!! \n";
+				return next_node[i].move;
 			}
-			if(max1 < temp_node.beta){
-				max1 = temp_node.beta;
-				action_index = (random_ind+i)%(moves.size());
+			if(max1==next_node[i].node.beta){
+				top_states.push_back(next_node[i]);
+			}
+			else if(max1 < next_node[i].node.beta){
+				top_states.clear();
+				top_states.push_back(next_node[i]);
+				max1 = next_node[i].node.beta;
+				action_index = i;
 			}
 		}						
-		return moves[action_index];
+		// if(top_states.size()==1 || !return_step)
+			return next_node[action_index].move;
+		// else{
+		// 	return heuristic_choose(top_states, numb_ply);
+		// 	// return heuristic_choose(top_states);
+
+		// }
 	}
 
 	string minValue(Node* node, int numb_ply, string s){
@@ -1053,39 +1238,63 @@ struct Node_prune{
 		if(moves.size()==0){
 			cerr<<"oppoent has no move left \n";
 		}
-		if(numb_ply==0 || moves.size() == 0){
+		if(numb_ply==0 || moves.size() == 0 || (*node).pieces_count[3]<=2){
 			(*node).eval = Evaluation_func((*node).state,(*node).pieces_count);
 			(*node).beta = (*node).eval;
 			return s;
 		}
-		
+
+		//Intelligent pruning......................................................................
+		NodeMove temp_node_move;
+		temp_node_move.node = (*node);
+		temp_node_move.move = "";
+
+		// cerr<<"Intelligent Prune -----------------------------"<<numb_ply<<endl;
+		vector<NodeMove> next_node(moves.size(), temp_node_move);
+		for(int i=0; i<moves.size(); i++){
+			next_node[i].move = moves[i];
+			next_node[i].node.state = update_state(next_node[i].node.state, moves[i], (next_node[i].node.pieces_count));
+			(next_node[i]).node.eval = Evaluation_func(next_node[i].node.state, next_node[i].node.pieces_count);
+		}
+
+		sort(next_node.begin(), next_node.end(), compareStates_inc);
+		//Intelligent pruning......................................................................
+		// cerr<<"MIN SORTED"<<next_node.size()<<endl;
+				
 		float min1 = INT_MAX;
 		vector<vector<int> > best_state;
 		int action_index=0;
 		string temp_string;
 		string action_string;
 		int random_ind = rand()%(moves.size());
-		for(int i=0; i<moves.size(); i++){
-			temp_node = *node;
-			temp_node.state  = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
-			temp_string = maxValue(&temp_node, numb_ply-1, moves[(random_ind+i)%(moves.size())]);
-			(*node).beta = min(((*node).beta), temp_node.alpha);
+		for(int i=0; i<next_node.size(); i++){
+			// temp_node = *node;
+			// temp_node.state  = update_state(temp_node.state, moves[(random_ind+i)%(moves.size())], (temp_node.pieces_count));
+			next_node[i].node.alpha = (*node).alpha;
+			next_node[i].node.beta = (*node).beta;
+			temp_string = maxValue(&(next_node[i].node), numb_ply-1, next_node[i].move, false);
+			// next_node[i].node.eval = next_node[i].node.alpha;
+			(*node).beta = min(((*node).beta), next_node[i].node.alpha);
+			// cerr<<"MIN- \n";
+			// cerr<<"alpha  "<<(*node).alpha<<" beta: "<<(*node).beta<<endl;
+			
 			if((*node).alpha >= (*node).beta){
-				return moves[(random_ind+i)%(moves.size())];
+				// cerr<<"MIN PRUNED!! \n";
+				return next_node[i].move;
 			}
-			if(min1 > temp_node.alpha){
-				min1 = temp_node.alpha;
-				action_index = (random_ind+i)%(moves.size());
+			if(min1 > next_node[i].node.alpha){
+				min1 = next_node[i].node.alpha;
+				action_index = i;
 			}
 		}
-		return moves[action_index];
+		return next_node[action_index].move;
 	}
 
 	string miniMax(Node* node, int numb_ply){
 		cerr<<"Move count----------------------------------------- "<< move_count <<"-----------------------------------------------"<<endl;
 		(*node).alpha = INT_MIN;
 		(*node).beta = INT_MAX;
-		string action = maxValue(node, numb_ply,"");
+		string action = maxValue(node, numb_ply,"", true);
 		// value already updated in node
 		return action;
 	}
@@ -1148,18 +1357,25 @@ struct Node_prune{
 	string myNextMove(Node* curr_node){
 		string next = "";
 		vector<string> valid_moves = getAllValidMoves((*curr_node).state,my_player, 1);
-		 	if(move_count<6){			//move greedily
+		 	if(move_count<16){			//move greedily
 			 	next = greedyBestStep(curr_node, weights);
+					// cerr<<"2 ply"<<endl;
+			 	
+			 	// next = miniMax(curr_node, 2);
 			}
 			else if(true){
-				if(move_count>=6 && move_count<200){	//ply of 4
-					cerr<<"2 ply"<<endl;
-					next = miniMax(curr_node, 1);
+				if(pieces_count[0] <= 3){
+					cerr<<"8 ply"<<endl;
+					next = miniMax(curr_node, 5);
+				}
+				else if(move_count>=16 && move_count<40){	//ply of 4
+					cerr<<"4 ply"<<endl;
+					next = miniMax(curr_node, 2);
 				} 
-				// else if(move_count>=10 && move_count<40){	//ply of 4
-				// 	cerr<<"4 ply"<<endl;
-				// 	next = miniMax(curr_node, 2);
-				// } 
+				else if(move_count>=40){	//ply of 4
+					cerr<<"6 ply"<<endl;
+					next = miniMax(curr_node, 4);
+				} 
 				// else if(move_count>=40 && move_count<=100 && valid_moves.size()<10){ //ply of 6
 				// 	next = miniMax(curr_node, 3);
 				// }
@@ -1189,7 +1405,7 @@ struct Node_prune{
 			if(weights[i] > 0)
 				weights[i] += (int)((weights[i] * learning_rate_inc));
 		}
-		learning_rate_inc -= 0.01;
+		learning_rate_inc -= 0.005;
 	}
 	else{
 		for(int i=4 ;i<14; i++){
@@ -1198,7 +1414,16 @@ struct Node_prune{
 			if(weights[i] < 0)
 				weights[i] += (int)((weights[i] * learning_rate_dec));
 		}
-		learning_rate_dec -= 0.01;
+		learning_rate_dec -= 0.005;
+	}
+
+	if(pieces_count[0] <= 6 && update_soldier_weight){
+		update_soldier_weight = false;
+		weights[0] += 500;
+	}
+	if(pieces_count[3] < 4 && update_tower_weight){
+		update_tower_weight  =false;
+		weights[3] -= 500;
 	}
 	printState(board);
 	cerr << " Weights begin: -----------------------------------" << endl;
@@ -1221,7 +1446,7 @@ struct Node_prune{
 			player = 2;
 		else
 			player = 1;
-		Board(N,M);
+		Board(M,N);
 		if(ID == 1){
 			player = 2;
 			my_player = 2;
